@@ -66,7 +66,7 @@ export default function AdminDashboard({
   const pendentes = obligations.filter(o => o.status === 'Pendente').length;
   const atrasados = obligations.filter(o => o.status === 'Atrasado').length;
 
-  const percentualEntregue = totalObrigacoes > 0 ? Math.round((entregues / totalObrigacoes) * 100) : 0;
+  const percentualEntregue = totalObrigacoes > 0 ? Math.round((entregues / totalObrigacoes) * 100) : 100;
 
   // Filtragem
   const obrigacoesFiltradas = obligations.filter(ob => {
@@ -248,7 +248,7 @@ export default function AdminDashboard({
               {entregues} <span style={{ fontSize: '0.9rem', color: '#94A3B8' }}>/ {totalObrigacoes}</span>
             </div>
             <div style={{ fontSize: '0.74rem', color: '#10B981', fontWeight: 600 }}>
-              {percentualEntregue}% de conformidade
+              {totalObrigacoes > 0 ? `${percentualEntregue}% de conformidade` : '100% em dia (Sem pendências)'}
             </div>
           </div>
 
@@ -464,8 +464,20 @@ export default function AdminDashboard({
                 <tbody>
                   {obrigacoesFiltradas.length === 0 ? (
                     <tr>
-                      <td colSpan="8" style={{ padding: '28px', textAlign: 'center', color: '#94A3B8' }}>
-                        Nenhuma obrigação encontrada.
+                      <td colSpan="8" style={{ padding: '36px 20px', textAlign: 'center', color: '#94A3B8' }}>
+                        <div style={{ fontSize: '1rem', color: '#FFFFFF', fontWeight: 600, marginBottom: '6px' }}>
+                          Nenhuma obrigação fiscal lançada no momento.
+                        </div>
+                        <div style={{ fontSize: '0.84rem', color: '#94A3B8', marginBottom: '14px' }}>
+                          A carteira está limpa e pronta para ser alimentada pela equipe de contadores.
+                        </div>
+                        <button
+                          onClick={() => setShowAddObligationForm(true)}
+                          className="btn btn-ruby btn-sm"
+                        >
+                          <Plus size={14} />
+                          <span>+ Lançar Primeira Obrigação</span>
+                        </button>
                       </td>
                     </tr>
                   ) : (

@@ -38,13 +38,13 @@ export default function App() {
     return INITIAL_CLIENTS;
   });
 
-  // Obrigações Reais
+  // Obrigações: Inicia limpo para alimentação manual pelos contadores
   const [obligations, setObligations] = useState(() => {
-    const saved = localStorage.getItem('y7_obligations_v2');
+    const saved = localStorage.getItem('y7_obligations_v3');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       } catch (e) {
         console.error('Erro ao ler obrigações', e);
       }
@@ -57,7 +57,7 @@ export default function App() {
   }, [clients]);
 
   useEffect(() => {
-    localStorage.setItem('y7_obligations_v2', JSON.stringify(obligations));
+    localStorage.setItem('y7_obligations_v3', JSON.stringify(obligations));
   }, [obligations]);
 
   // Ação de Login Geral

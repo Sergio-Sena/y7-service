@@ -71,54 +71,8 @@ export const OBLIGATIONS_CATALOG = {
   ]
 };
 
-// Histórico de Obrigações Reais da Própria Y7 Service (conectadas ao Google Calendar)
-export const INITIAL_OBLIGATIONS_RECORD = [
-  {
-    id: "ob-y7-01",
-    clienteId: "cli-y7",
-    clienteNome: "Y7 SERVICE LTDA",
-    cnpj: "40.216.188/0001-24",
-    regime: "Lucro Presumido",
-    obrigacao: "DCTFWeb",
-    competencia: "10/2026",
-    vencimento: "2026-10-15",
-    status: "Pendente",
-    protocolo: null,
-    dataEntrega: null,
-    responsavel: "Nilson / Diretoria",
-    observacao: "Fechamento de folha e tributos previdenciários."
-  },
-  {
-    id: "ob-y7-02",
-    clienteId: "cli-y7",
-    clienteNome: "Y7 SERVICE LTDA",
-    cnpj: "40.216.188/0001-24",
-    regime: "Lucro Presumido",
-    obrigacao: "EFD-Contribuições",
-    competencia: "10/2026",
-    vencimento: "2026-10-15",
-    status: "Pendente",
-    protocolo: null,
-    dataEntrega: null,
-    responsavel: "Nilson / Diretoria",
-    observacao: "Apuração de PIS/COFINS sobre serviços."
-  },
-  {
-    id: "ob-y7-03",
-    clienteId: "cli-y7",
-    clienteNome: "Y7 SERVICE LTDA",
-    cnpj: "40.216.188/0001-24",
-    regime: "Lucro Presumido",
-    obrigacao: "DCTF Mensal",
-    competencia: "10/2026",
-    vencimento: "2026-10-20",
-    status: "Entregue",
-    protocolo: "REC-40216-DCTF-2026",
-    dataEntrega: "2026-10-02",
-    responsavel: "Nilson / Diretoria",
-    observacao: "Transmitido com sucesso à Receita Federal."
-  }
-];
+// Registro de Obrigações: Inicia 100% limpo para ser alimentado em tempo real pelos contadores
+export const INITIAL_OBLIGATIONS_RECORD = [];
 
 // Dados Tecnológicos do Dashboard Contábil Visual
 export const DASHBOARD_METRICS = {

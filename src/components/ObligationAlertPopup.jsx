@@ -59,9 +59,15 @@ export default function ObligationAlertPopup({ isOpen, onClose, obligations }) {
           </button>
         </div>
 
-        <p style={{ color: '#E2E8F0', fontSize: '0.94rem', lineHeight: 1.5, marginBottom: '18px' }}>
-          Identificamos <strong>{pendencias.length} obrigação(ões)</strong> que necessitam de acompanhamento prioritário. Conecte ao seu Google Agenda para receber notificações automáticas antes do vencimento:
-        </p>
+        {pendencias.length > 0 ? (
+          <p style={{ color: '#E2E8F0', fontSize: '0.94rem', lineHeight: 1.5, marginBottom: '18px' }}>
+            Identificamos <strong>{pendencias.length} obrigação(ões)</strong> que necessitam de acompanhamento prioritário. Conecte ao seu Google Agenda para receber notificações automáticas antes do vencimento:
+          </p>
+        ) : (
+          <p style={{ color: '#CBD5E1', fontSize: '0.94rem', lineHeight: 1.5, marginBottom: '18px' }}>
+            Nenhuma obrigação pendente no momento. Conforme os contadores forem lançando as declarações e tributos de cada cliente, os alertas e sincronizações com o Google Agenda ficarão disponíveis aqui.
+          </p>
+        )}
 
         {/* Lista de Pendências */}
         <div style={{
