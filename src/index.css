@@ -274,6 +274,70 @@ select.form-control option {
 }
 
 /* =======================================================
+   ESTILOS DE IMPRESSÃO / SALVAR EM PDF (A4 TIMBRADO)
+   ======================================================= */
+@media print {
+  /* Ocultar navegação, footer, botões de ação e modais */
+  header, footer, .no-print, button, .btn, .modal-overlay {
+    display: none !important;
+  }
+
+  body {
+    background-color: #FFFFFF !important;
+    background-image: none !important;
+    color: #111827 !important;
+    font-size: 11pt !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .container {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .printable-report {
+    background-color: #FFFFFF !important;
+    color: #111827 !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .printable-report * {
+    color: #111827 !important;
+    border-color: #D1D5DB !important;
+    background: transparent !important;
+    text-shadow: none !important;
+    box-shadow: none !important;
+  }
+
+  .printable-report .report-header {
+    border-bottom: 2px solid #C81E3D !important;
+    padding-bottom: 12px !important;
+    margin-bottom: 20px !important;
+  }
+
+  .printable-report .highlight-row {
+    background-color: #F3F4F6 !important;
+    font-weight: bold !important;
+  }
+
+  .printable-report .super-highlight {
+    background-color: #E5E7EB !important;
+    border: 1px solid #9CA3AF !important;
+    font-weight: bold !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 15mm 15mm 15mm 15mm;
+  }
+}
+
+/* =======================================================
    RESPONSIVIDADE MOBILE COMPLETA
    ======================================================= */
 @media (max-width: 768px) {
@@ -289,12 +353,10 @@ select.form-control option {
     display: none !important;
   }
 
-  /* Ajuste de seções */
   section {
     padding: 50px 0 !important;
   }
 
-  /* Ajuste de Hero no celular */
   h1 {
     font-size: 2rem !important;
     line-height: 1.25 !important;
@@ -327,12 +389,10 @@ select.form-control option {
     margin: 0 auto;
   }
 
-  /* Cards e painéis no celular */
   .glass-panel {
     padding: 20px !important;
   }
 
-  /* Ajuste de barras de gráfico no celular */
   .chart-bars-container {
     overflow-x: auto;
     padding-bottom: 10px;

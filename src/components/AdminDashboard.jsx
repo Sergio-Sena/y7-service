@@ -21,15 +21,20 @@ import { Y7_INFO } from '../data/initialData';
 import { generateGoogleCalendarUrl, exportToIcsCalendar } from '../utils/googleCalendar';
 import ClientModal from './ClientModal';
 import ProtocolModal from './ProtocolModal';
+import FinancialStatementsEditor from './FinancialStatementsEditor';
 
 export default function AdminDashboard({ 
   clients, 
   setClients, 
   obligations, 
   setObligations,
-  onOpenAlertPopup
+  onOpenAlertPopup,
+  activeTab: propActiveTab,
+  setActiveTab: propSetActiveTab
 }) {
-  const [activeTab, setActiveTab] = useState('obrigacoes'); // obrigacoes, clientes, demonstrativos
+  const [localActiveTab, setLocalActiveTab] = useState('obrigacoes');
+  const activeTab = propActiveTab || localActiveTab;
+  const setActiveTab = propSetActiveTab || setLocalActiveTab;
   const [filtroRegime, setFiltroRegime] = useState('Todos');
   const [filtroStatus, setFiltroStatus] = useState('Todos');
   const [termoBusca, setTermoBusca] = useState('');
@@ -678,108 +683,10 @@ export default function AdminDashboard({
         )}
 
         {/* ========================================================
-            ABA 3: EMISSÃO DE DRE & BALANÇO
+            ABA 3: EMISSÃO E INJEÇÃO DE DRE & BALANÇO (IMPRESSÃO / PDF)
            ======================================================== */}
         {activeTab === 'demonstrativos' && (
-          <div className="glass-panel" style={{ padding: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '14px' }}>
-              <div>
-                <h3 style={{ fontSize: '1.25rem', color: '#FFFFFF' }}>Emissão de Demonstrativos Oficiais</h3>
-                <div style={{ fontSize: '0.82rem', color: '#94A3B8' }}>
-                  Balanço Patrimonial e DRE com chancela da Y7 Service
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                <select
-                  className="form-control"
-                  style={{ width: 'auto', fontSize: '0.86rem' }}
-                  value={selectedClientForReport}
-                  onChange={(e) => setSelectedClientForReport(e.target.value)}
-                >
-                  {clients.map(c => (
-                    <option key={c.id} value={c.id}>{c.razaoSocial}</option>
-                  ))}
-                </select>
-
-                <button 
-                  onClick={() => window.print()}
-                  className="btn btn-ruby btn-sm"
-                >
-                  <Printer size={15} />
-                  <span>Imprimir Demonstrativo</span>
-                </button>
-              </div>
-            </div>
-
-            <div style={{
-              backgroundColor: '#0a0f1d',
-              borderRadius: '8px',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              padding: '24px'
-            }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                borderBottom: '2px solid #C81E3D',
-                paddingBottom: '16px',
-                marginBottom: '20px'
-              }}>
-                <div>
-                  <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#FFFFFF' }}>
-                    Y7 SERVICE LTDA
-                  </div>
-                  <div style={{ fontSize: '0.78rem', color: '#94A3B8' }}>
-                    Assessoria Contábil, Fiscal & Societária • Alphaville, Barueri/SP • CNPJ: {Y7_INFO.cnpj}
-                  </div>
-                </div>
-
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '1rem', fontWeight: 700, color: '#FFFFFF' }}>
-                    {clients.find(c => c.id === selectedClientForReport)?.razaoSocial || clients[0]?.razaoSocial}
-                  </div>
-                  <div className="mono" style={{ fontSize: '0.8rem', color: '#38BDF8' }}>
-                    CNPJ: {clients.find(c => c.id === selectedClientForReport)?.cnpj || clients[0]?.cnpj}
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '4px' }}>
-                  <span>RECEITA OPERACIONAL BRUTA</span>
-                  <span className="mono" style={{ fontWeight: 700 }}>R$ 1.850.000,00</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px' }}>
-                  <span style={{ color: '#94A3B8' }}>(-) Impostos sobre Faturamento</span>
-                  <span className="mono" style={{ color: '#EF4444' }}>- R$ 175.750,00</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '4px' }}>
-                  <strong>(=) RECEITA OPERACIONAL LÍQUIDA</strong>
-                  <span className="mono" style={{ fontWeight: 700 }}>R$ 1.674.250,00</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px' }}>
-                  <span style={{ color: '#94A3B8' }}>(-) Custos Operacionais</span>
-                  <span className="mono" style={{ color: '#EF4444' }}>- R$ 740.000,00</span>
-                </div>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  padding: '12px 16px',
-                  backgroundColor: 'rgba(200, 30, 61, 0.18)',
-                  border: '1px solid rgba(200, 30, 61, 0.4)',
-                  borderRadius: '6px'
-                }}>
-                  <strong style={{ color: '#FFFFFF' }}>
-                    (=) LUCRO LÍQUIDO DO EXERCÍCIO
-                  </strong>
-                  <span className="mono" style={{ fontSize: '1.15rem', fontWeight: 800, color: '#34D399' }}>
-                    R$ 554.250,00
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <FinancialStatementsEditor clients={clients} />
         )}
       </div>
 

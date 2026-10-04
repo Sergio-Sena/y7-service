@@ -16,6 +16,9 @@ export default function App() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isAlertPopupOpen, setIsAlertPopupOpen] = useState(false);
 
+  const [adminTab, setAdminTab] = useState('obrigacoes');
+  const [pendingTabAfterLogin, setPendingTabAfterLogin] = useState(null);
+
   // Autenticação oficial: Admind / Admin1307
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return sessionStorage.getItem('y7_auth') === 'true';
@@ -57,25 +60,37 @@ export default function App() {
     localStorage.setItem('y7_obligations_v2', JSON.stringify(obligations));
   }, [obligations]);
 
-  // Ação de Login
-  const handleLoginClick = () => {
+  // Ação de Login Geral
+  const handleLoginClick = (targetTab = 'obrigacoes') => {
     if (isAuthenticated) {
+      setAdminTab(targetTab);
       setCurrentView('admin');
-      // Dispara o alerta de popup para avisar o contador sobre os prazos
-      setIsAlertPopupOpen(true);
+      if (targetTab === 'obrigacoes') {
+        setIsAlertPopupOpen(true);
+      }
     } else {
+      setPendingTabAfterLogin(targetTab);
       setIsLoginModalOpen(true);
     }
+  };
+
+  const handleOpenDemonstrativos = () => {
+    handleLoginClick('demonstrativos');
   };
 
   const handleLoginSuccess = () => {
     setIsAuthenticated(true);
     sessionStorage.setItem('y7_auth', 'true');
+    const targetTab = pendingTabAfterLogin || 'obrigacoes';
+    setAdminTab(targetTab);
+    setPendingTabAfterLogin(null);
     setCurrentView('admin');
-    // Popup imediato avisando o contador sobre as obrigações a vencer
-    setTimeout(() => {
-      setIsAlertPopupOpen(true);
-    }, 400);
+    
+    if (targetTab === 'obrigacoes') {
+      setTimeout(() => {
+        setIsAlertPopupOpen(true);
+      }, 400);
+    }
   };
 
   const handleLogout = () => {
@@ -106,7 +121,7 @@ export default function App() {
           <>
             <Hero />
             <ServicesSection />
-            <FinancialDashboard />
+            <FinancialDashboard onOpenDemonstrativos={handleOpenDemonstrativos} />
             <LocationSection />
           </>
         ) : (
@@ -115,6 +130,8 @@ export default function App() {
             setClients={setClients}
             obligations={obligations}
             setObligations={setObligations}
+            activeTab={adminTab}
+            setActiveTab={setAdminTab}
             onOpenAlertPopup={() => setIsAlertPopupOpen(true)}
           />
         )}

@@ -1,8 +1,8 @@
 import React from 'react';
-import { Cpu, TrendingUp, ShieldCheck, Activity } from 'lucide-react';
+import { Cpu, TrendingUp, ShieldCheck, Activity, Printer, FileEdit, FileSpreadsheet } from 'lucide-react';
 import { DASHBOARD_METRICS } from '../data/initialData';
 
-export default function FinancialDashboard() {
+export default function FinancialDashboard({ onOpenDemonstrativos }) {
   const formatBRL = (val) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(val);
   };
@@ -306,6 +306,52 @@ export default function FinancialDashboard() {
               <div className="mono" style={{ fontSize: '1.35rem', fontWeight: 800, color: '#34D399' }}>{formatBRL(DASHBOARD_METRICS.balancoEstrutural.patrimonioLiquido)}</div>
               <div style={{ fontSize: '0.8rem', color: '#94A3B8', marginTop: '4px' }}>Capital social e lucros prontos para distribuição</div>
             </div>
+          </div>
+        </div>
+
+        {/* Módulo Oficial: Injeção de Dados e Impressão / Salvar em PDF */}
+        <div style={{
+          marginTop: '32px',
+          padding: '24px 28px',
+          borderRadius: '10px',
+          background: 'linear-gradient(135deg, rgba(200, 30, 61, 0.15) 0%, rgba(14, 22, 38, 0.9) 100%)',
+          border: '1px solid rgba(200, 30, 61, 0.4)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '20px',
+          boxShadow: '0 8px 30px rgba(0, 0, 0, 0.4)'
+        }}>
+          <div style={{ maxWidth: '640px' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#38BDF8', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '6px' }}>
+              <FileSpreadsheet size={15} />
+              <span>Emissão Contábil Oficial • Papel Timbrado Y7 Service</span>
+            </div>
+            <h3 style={{ fontSize: '1.25rem', color: '#FFFFFF', marginBottom: '6px' }}>
+              Injeção de Dados & Emissão de Balanço e DRE em PDF
+            </h3>
+            <p style={{ color: '#CBD5E1', fontSize: '0.92rem', margin: 0, lineHeight: 1.5 }}>
+              Acesse o módulo oficial do contador para injetar/editar as informações contábeis da sua empresa (receitas, despesas, ativos e passivos) e gerar o documento timbrado formal pronto para <strong>imprimir ou salvar em PDF</strong>.
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <button
+              onClick={onOpenDemonstrativos}
+              className="btn btn-ruby"
+              style={{
+                padding: '12px 22px',
+                fontSize: '0.92rem',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: '0 4px 15px rgba(200, 30, 61, 0.5)'
+              }}
+            >
+              <FileEdit size={16} />
+              <span>Injetar Informações & Emitir em PDF</span>
+            </button>
           </div>
         </div>
       </div>
