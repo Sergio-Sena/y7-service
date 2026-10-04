@@ -533,22 +533,23 @@ export default function FinancialStatementsEditor({ clients }) {
           boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)'
         }}
       >
-        {/* Cabeçalho do Papel Timbrado Oficial */}
+        {/* Cabeçalho do Papel Timbrado Oficial - Estritamente Y7 Service */}
         <div className="report-header" style={{
           display: 'flex',
-          justifyContent: 'space-between',
+          flexDirection: 'column',
           alignItems: 'center',
-          borderBottom: '2px solid #C81E3D',
-          paddingBottom: '20px',
-          marginBottom: '26px',
-          flexWrap: 'wrap',
-          gap: '14px'
+          justifyContent: 'center',
+          textAlign: 'center',
+          borderBottom: '2.5px solid #C81E3D',
+          paddingBottom: '16px',
+          marginBottom: '20px',
+          gap: '8px'
         }}>
-          {/* Logo e Dados da Emissora Y7 Service */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          {/* Logo e Nome da Y7 */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '14px' }}>
             <div style={{
-              width: '52px',
-              height: '52px',
+              width: '54px',
+              height: '54px',
               borderRadius: '8px',
               overflow: 'hidden',
               border: '2px solid #C81E3D',
@@ -561,51 +562,39 @@ export default function FinancialStatementsEditor({ clients }) {
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
             </div>
-            <div>
-              <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#FFFFFF', letterSpacing: '0.02em' }}>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ fontSize: '1.65rem', fontWeight: 900, color: '#FFFFFF', letterSpacing: '0.04em', lineHeight: 1.1 }}>
                 Y7 SERVICE LTDA
               </div>
-              <div style={{ fontSize: '0.82rem', color: '#94A3B8' }}>
-                Assessoria Contábil, Auditoria & Gestão Tributária
-              </div>
-              <div style={{ fontSize: '0.8rem', color: '#38BDF8' }}>
-                CNPJ: {Y7_INFO.cnpj} • Av. Copacabana, 112 - Sala 1712, Alphaville - Barueri/SP
-              </div>
-              <div style={{ fontSize: '0.78rem', color: '#94A3B8' }}>
-                E-mail: {Y7_INFO.contatos.email} • Tel: {Y7_INFO.contatos.telefone}
+              <div style={{ fontSize: '0.82rem', color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Assessoria Contábil, Auditoria & Gestão Tributária Estratégica
               </div>
             </div>
           </div>
 
-          {/* Dados da Empresa Cliente Auditada */}
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '0.76rem', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              Cliente / Empresa Auditada
-            </div>
-            <div style={{ fontSize: '1.15rem', fontWeight: 700, color: '#FFFFFF' }}>
-              {selectedClient.razaoSocial}
-            </div>
-            <div className="mono" style={{ fontSize: '0.86rem', color: '#E2E8F0' }}>
-              CNPJ: {selectedClient.cnpj}
-            </div>
-            <div style={{ fontSize: '0.8rem', color: '#10B981', fontWeight: 600 }}>
-              Regime Tributário: {selectedClient.regime}
-            </div>
-            <div style={{ fontSize: '0.78rem', color: '#94A3B8' }}>
-              {financialData.periodo}
-            </div>
+          {/* Dados Fiscais e Localização Y7 */}
+          <div style={{ fontSize: '0.82rem', color: '#CBD5E1', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px', marginTop: '2px' }}>
+            <span><strong>CNPJ:</strong> {Y7_INFO.cnpj}</span>
+            <span>•</span>
+            <span><strong>Endereço:</strong> Av. Copacabana, 112 - Sala 1712, Alphaville - Barueri/SP</span>
+          </div>
+
+          <div style={{ fontSize: '0.78rem', color: '#94A3B8', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px' }}>
+            <span><strong>E-mail:</strong> {Y7_INFO.contatos.email}</span>
+            <span>•</span>
+            <span><strong>WhatsApp/Tel:</strong> {Y7_INFO.contatos.telefone}</span>
           </div>
         </div>
 
-        {/* TÍTULO DO RELATÓRIO */}
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '1.35rem', color: '#FFFFFF', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+        {/* TÍTULO DO RELATÓRIO & PERÍODO */}
+        <div style={{ textAlign: 'center', marginBottom: '22px', paddingBottom: '10px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+          <h2 style={{ fontSize: '1.25rem', color: '#FFFFFF', textTransform: 'uppercase', letterSpacing: '0.04em', margin: 0 }}>
             {reportType === 'dre' && 'Demonstração do Resultado do Exercício (DRE)'}
             {reportType === 'balanco' && 'Balanço Patrimonial Sintético'}
-            {reportType === 'unificado' && 'Demonstrações Contábeis: DRE & Balanço Patrimonial'}
+            {reportType === 'unificado' && 'Demonstrações Contábeis Oficiais: DRE & Balanço Patrimonial'}
           </h2>
-          <div style={{ fontSize: '0.84rem', color: '#94A3B8' }}>
-            Normas Brasileiras de Contabilidade (NBC TG / CFC) • Padrão IFRS
+          <div style={{ fontSize: '0.84rem', color: '#38BDF8', fontWeight: 600, marginTop: '4px' }}>
+            {financialData.periodo} • Normas Brasileiras de Contabilidade (NBC TG / CFC) • Padrão IFRS
           </div>
         </div>
 

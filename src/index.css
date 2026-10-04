@@ -277,63 +277,87 @@ select.form-control option {
    ESTILOS DE IMPRESSÃO / SALVAR EM PDF (A4 TIMBRADO)
    ======================================================= */
 @media print {
-  /* Ocultar navegação, footer, botões de ação e modais */
-  header, footer, .no-print, button, .btn, .modal-overlay {
-    display: none !important;
-  }
-
-  body {
-    background-color: #FFFFFF !important;
+  /* Ocultar rigorosamente todo o site e componentes fora do relatório */
+  html, body {
+    background: #FFFFFF !important;
     background-image: none !important;
     color: #111827 !important;
-    font-size: 11pt !important;
     padding: 0 !important;
     margin: 0 !important;
+    width: 100% !important;
+    min-height: auto !important;
   }
 
-  .container {
-    max-width: 100% !important;
-    padding: 0 !important;
-    margin: 0 !important;
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* Exibir ESTRITAMENTE o relatório timbrado oficial da Y7 */
+  .printable-report,
+  .printable-report * {
+    visibility: visible !important;
   }
 
   .printable-report {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 10mm 12mm !important;
+    background: #FFFFFF !important;
     background-color: #FFFFFF !important;
     color: #111827 !important;
     border: none !important;
     box-shadow: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
+    border-radius: 0 !important;
   }
 
   .printable-report * {
     color: #111827 !important;
-    border-color: #D1D5DB !important;
+    border-color: #CBD5E1 !important;
     background: transparent !important;
     text-shadow: none !important;
     box-shadow: none !important;
   }
 
   .printable-report .report-header {
-    border-bottom: 2px solid #C81E3D !important;
-    padding-bottom: 12px !important;
-    margin-bottom: 20px !important;
+    border-bottom: 2.5px solid #C81E3D !important;
+    padding-bottom: 14px !important;
+    margin-bottom: 18px !important;
   }
 
   .printable-report .highlight-row {
-    background-color: #F3F4F6 !important;
+    background-color: #F8FAFC !important;
     font-weight: bold !important;
   }
 
   .printable-report .super-highlight {
-    background-color: #E5E7EB !important;
-    border: 1px solid #9CA3AF !important;
+    background-color: #F1F5F9 !important;
+    border: 1px solid #94A3B8 !important;
     font-weight: bold !important;
+  }
+
+  /* Ocultar completamente qualquer botão, link, menu, cabeçalho e formulário */
+  button, 
+  .btn, 
+  .no-print, 
+  header, 
+  footer, 
+  nav, 
+  input, 
+  select, 
+  textarea, 
+  form, 
+  .modal-overlay,
+  .glass-panel:not(.printable-report) {
+    display: none !important;
+    visibility: hidden !important;
   }
 
   @page {
     size: A4 portrait;
-    margin: 15mm 15mm 15mm 15mm;
+    margin: 8mm 10mm;
   }
 }
 

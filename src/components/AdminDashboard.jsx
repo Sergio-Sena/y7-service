@@ -150,7 +150,7 @@ export default function AdminDashboard({
     <div style={{ padding: '36px 0 70px 0' }}>
       <div className="container">
         {/* Header do Painel */}
-        <div style={{
+        <div className="no-print" style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -216,7 +216,7 @@ export default function AdminDashboard({
         </div>
 
         {/* KPIs Cards */}
-        <div style={{
+        <div className="no-print" style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
           gap: '16px',
@@ -284,7 +284,7 @@ export default function AdminDashboard({
         </div>
 
         {/* Abas */}
-        <div style={{
+        <div className="no-print" style={{
           display: 'flex',
           borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
           marginBottom: '24px',
