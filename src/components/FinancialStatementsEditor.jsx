@@ -579,10 +579,8 @@ export default function FinancialStatementsEditor({ clients }) {
             <span><strong>Endereço:</strong> Av. Copacabana, 112 - Sala 1712, Alphaville - Barueri/SP</span>
           </div>
 
-          <div style={{ fontSize: '0.78rem', color: '#94A3B8', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px' }}>
+          <div style={{ fontSize: '0.8rem', color: '#94A3B8', display: 'flex', justifyContent: 'center', marginTop: '2px' }}>
             <span><strong>E-mail:</strong> {Y7_INFO.contatos.email}</span>
-            <span>•</span>
-            <span><strong>WhatsApp/Tel:</strong> {Y7_INFO.contatos.telefone}</span>
           </div>
         </div>
 
