@@ -784,36 +784,47 @@ export default function FinancialStatementsEditor({ clients }) {
 
         {/* Quadro de Assinaturas Formais (Exibido na impressão e tela) */}
         <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-end',
-          paddingTop: '40px',
+          paddingTop: '32px',
           borderTop: '1px dashed rgba(255, 255, 255, 0.2)',
-          marginTop: '30px',
-          flexWrap: 'wrap',
-          gap: '24px'
+          marginTop: '36px'
         }}>
-          {/* Data e Local */}
-          <div style={{ fontSize: '0.82rem', color: '#94A3B8', lineHeight: 1.6 }}>
-            Barueri - Alphaville/SP, {new Date().toLocaleDateString('pt-BR')}<br />
-            Certificação e Emissão Digital por <strong>Y7 SERVICE LTDA</strong><br />
-            Responsabilidade Técnica Contábil assegurada.
+          {/* Data e Certificação Digital */}
+          <div style={{ 
+            fontSize: '0.82rem', 
+            color: '#94A3B8', 
+            lineHeight: 1.5,
+            textAlign: 'center',
+            marginBottom: '40px'
+          }}>
+            Barueri - Alphaville/SP, {new Date().toLocaleDateString('pt-BR')} &nbsp;•&nbsp; 
+            Certificação e Emissão Digital por <strong>Y7 SERVICE LTDA</strong> &nbsp;•&nbsp; 
+            Responsabilidade Técnica Contábil Assegurada
           </div>
 
-          {/* Assinatura Contador */}
-          <div style={{ textAlign: 'center', minWidth: '220px' }}>
-            <div style={{ borderBottom: '1px solid #CBD5E1', marginBottom: '8px', width: '220px' }} />
-            <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#FFFFFF' }}>Nilson / Contabilidade</div>
-            <div style={{ fontSize: '0.76rem', color: '#94A3B8' }}>Contador Responsável Técnico • CRC/SP</div>
-            <div style={{ fontSize: '0.74rem', color: '#38BDF8' }}>Y7 SERVICE LTDA</div>
-          </div>
+          {/* Linha das Assinaturas Rigorosamente na Mesma Altura */}
+          <div className="signature-grid" style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '36px',
+            alignItems: 'flex-start',
+            maxWidth: '720px',
+            margin: '0 auto'
+          }}>
+            {/* Assinatura Contador */}
+            <div className="signature-col" style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div className="signature-line" style={{ borderBottom: '1.5px solid #CBD5E1', marginBottom: '10px', width: '240px' }} />
+              <div style={{ fontSize: '0.94rem', fontWeight: 700, color: '#FFFFFF' }}>Nilson / Contabilidade</div>
+              <div style={{ fontSize: '0.78rem', color: '#94A3B8', marginTop: '2px' }}>Contador Responsável Técnico • CRC/SP</div>
+              <div style={{ fontSize: '0.76rem', color: '#38BDF8', fontWeight: 600, marginTop: '2px' }}>Y7 SERVICE LTDA</div>
+            </div>
 
-          {/* Assinatura Administrador Cliente */}
-          <div style={{ textAlign: 'center', minWidth: '220px' }}>
-            <div style={{ borderBottom: '1px solid #CBD5E1', marginBottom: '8px', width: '220px' }} />
-            <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#FFFFFF' }}>{selectedClient.responsavel || 'Administrador(a)'}</div>
-            <div style={{ fontSize: '0.76rem', color: '#94A3B8' }}>Sócio / Representante Legal</div>
-            <div style={{ fontSize: '0.74rem', color: '#94A3B8' }}>{selectedClient.razaoSocial}</div>
+            {/* Assinatura Administrador / Sócio */}
+            <div className="signature-col" style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div className="signature-line" style={{ borderBottom: '1.5px solid #CBD5E1', marginBottom: '10px', width: '240px' }} />
+              <div style={{ fontSize: '0.94rem', fontWeight: 700, color: '#FFFFFF' }}>{selectedClient.responsavel || 'Administrador(a)'}</div>
+              <div style={{ fontSize: '0.78rem', color: '#94A3B8', marginTop: '2px' }}>Sócio / Representante Legal</div>
+              <div style={{ fontSize: '0.76rem', color: '#CBD5E1', fontWeight: 500, marginTop: '2px' }}>{selectedClient.razaoSocial}</div>
+            </div>
           </div>
         </div>
       </div>

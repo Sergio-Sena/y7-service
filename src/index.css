@@ -338,6 +338,31 @@ select.form-control option {
     font-weight: bold !important;
   }
 
+  /* Alinhamento Milimétrico das Assinaturas na Impressão */
+  .printable-report .signature-grid {
+    display: table !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-top: 36px !important;
+    table-layout: fixed !important;
+  }
+
+  .printable-report .signature-col {
+    display: table-cell !important;
+    width: 50% !important;
+    vertical-align: top !important;
+    text-align: center !important;
+    padding: 0 20px !important;
+  }
+
+  .printable-report .signature-line {
+    border-bottom: 1.5px solid #111827 !important;
+    width: 220px !important;
+    height: 0 !important;
+    margin: 0 auto 10px auto !important;
+    display: block !important;
+  }
+
   /* Ocultar completamente qualquer botão, link, menu, cabeçalho e formulário */
   button, 
   .btn, 
