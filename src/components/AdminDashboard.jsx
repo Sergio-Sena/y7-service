@@ -1,0 +1,801 @@
+import React, { useState } from 'react';
+import { 
+  Building2, 
+  Users, 
+  CheckCircle2, 
+  Clock, 
+  AlertTriangle, 
+  Calendar, 
+  Plus, 
+  Search, 
+  CalendarPlus, 
+  FileText, 
+  BarChart3, 
+  Check, 
+  Trash2, 
+  Edit3,
+  Bell,
+  Printer
+} from 'lucide-react';
+import { Y7_INFO } from '../data/initialData';
+import { generateGoogleCalendarUrl, exportToIcsCalendar } from '../utils/googleCalendar';
+import ClientModal from './ClientModal';
+import ProtocolModal from './ProtocolModal';
+
+export default function AdminDashboard({ 
+  clients, 
+  setClients, 
+  obligations, 
+  setObligations,
+  onOpenAlertPopup
+}) {
+  const [activeTab, setActiveTab] = useState('obrigacoes'); // obrigacoes, clientes, demonstrativos
+  const [filtroRegime, setFiltroRegime] = useState('Todos');
+  const [filtroStatus, setFiltroStatus] = useState('Todos');
+  const [termoBusca, setTermoBusca] = useState('');
+  
+  // Modais
+  const [isClientModalOpen, setIsClientModalOpen] = useState(false);
+  const [editingClient, setEditingClient] = useState(null);
+  
+  const [isProtocolModalOpen, setIsProtocolModalOpen] = useState(false);
+  const [selectedObligation, setSelectedObligation] = useState(null);
+
+  // Cliente selecionado para demonstrativo
+  const [selectedClientForReport, setSelectedClientForReport] = useState(clients[0]?.id || '');
+
+  // Nova obrigação rápida
+  const [showAddObligationForm, setShowAddObligationForm] = useState(false);
+  const [newObData, setNewObData] = useState({
+    clienteId: clients[0]?.id || '',
+    obrigacao: 'DCTFWeb',
+    competencia: '10/2026',
+    vencimento: '2026-10-15',
+    observacao: ''
+  });
+
+  // Estatísticas
+  const totalClientes = clients.length;
+  const totalObrigacoes = obligations.length;
+  const entregues = obligations.filter(o => o.status === 'Entregue').length;
+  const pendentes = obligations.filter(o => o.status === 'Pendente').length;
+  const atrasados = obligations.filter(o => o.status === 'Atrasado').length;
+
+  const percentualEntregue = totalObrigacoes > 0 ? Math.round((entregues / totalObrigacoes) * 100) : 0;
+
+  // Filtragem
+  const obrigacoesFiltradas = obligations.filter(ob => {
+    const matchRegime = filtroRegime === 'Todos' || ob.regime === filtroRegime;
+    const matchStatus = filtroStatus === 'Todos' || ob.status === filtroStatus;
+    const matchBusca = termoBusca === '' || 
+      ob.clienteNome.toLowerCase().includes(termoBusca.toLowerCase()) ||
+      ob.cnpj.includes(termoBusca) ||
+      ob.obrigacao.toLowerCase().includes(termoBusca.toLowerCase());
+    return matchRegime && matchStatus && matchBusca;
+  });
+
+  const handleSaveClient = (clientData) => {
+    if (editingClient) {
+      setClients(clients.map(c => c.id === clientData.id ? clientData : c));
+    } else {
+      setClients([clientData, ...clients]);
+    }
+    setEditingClient(null);
+  };
+
+  const handleDeleteClient = (id) => {
+    if (window.confirm('Deseja realmente remover este cliente e suas obrigações?')) {
+      setClients(clients.filter(c => c.id !== id));
+      setObligations(obligations.filter(o => o.clienteId !== id));
+    }
+  };
+
+  const handleUpdateObligation = (updated) => {
+    setObligations(obligations.map(o => o.id === updated.id ? updated : o));
+  };
+
+  const handleCreateObligation = (e) => {
+    e.preventDefault();
+    const cliente = clients.find(c => c.id === newObData.clienteId);
+    if (!cliente) return;
+
+    const nova = {
+      id: `ob-${Date.now()}`,
+      clienteId: cliente.id,
+      clienteNome: cliente.razaoSocial,
+      cnpj: cliente.cnpj,
+      regime: cliente.regime,
+      obrigacao: newObData.obrigacao,
+      competencia: newObData.competencia,
+      vencimento: newObData.vencimento,
+      status: 'Pendente',
+      protocolo: null,
+      dataEntrega: null,
+      responsavel: 'Contador Responsável Y7',
+      observacao: newObData.observacao
+    };
+
+    setObligations([nova, ...obligations]);
+    setShowAddObligationForm(false);
+  };
+
+  const handleExportAllToGoogleCalendar = () => {
+    const success = exportToIcsCalendar(obligations, `Y7_Obrigacoes_Contabeis.ics`);
+    if (success) {
+      alert('Arquivo de calendário (.ics) baixado com sucesso!\nImporte no Google Agenda para ativar todos os alarmes automáticos.');
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'Entregue':
+        return <span className="badge badge-entregue"><Check size={12} /> Entregue</span>;
+      case 'Em Andamento':
+        return <span className="badge badge-andamento"><Clock size={12} /> Em Andamento</span>;
+      case 'Pendente':
+        return <span className="badge badge-pendente"><AlertTriangle size={12} /> Pendente</span>;
+      case 'Atrasado':
+        return <span className="badge badge-atrasado"><AlertTriangle size={12} /> Atrasado</span>;
+      default:
+        return <span className="badge">{status}</span>;
+    }
+  };
+
+  return (
+    <div style={{ padding: '36px 0 70px 0' }}>
+      <div className="container">
+        {/* Header do Painel */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '18px',
+          marginBottom: '28px',
+          paddingBottom: '20px',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+        }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{
+                backgroundColor: 'rgba(200, 30, 61, 0.18)',
+                color: '#F87171',
+                padding: '3px 8px',
+                borderRadius: '4px',
+                fontSize: '0.76rem',
+                fontWeight: 700
+              }}>
+                PAINEL DO CONTADOR
+              </span>
+              <span style={{ fontSize: '0.82rem', color: '#94A3B8' }}>
+                Usuário Conectado: <strong>Admind</strong>
+              </span>
+            </div>
+            <h1 style={{ fontSize: '2rem', color: '#FFFFFF', marginTop: '4px' }}>
+              Gestão Fiscal & Obrigações Conectadas
+            </h1>
+            <div style={{ fontSize: '0.86rem', color: '#94A3B8' }}>
+              {Y7_INFO.razaoSocial} • Alphaville Barueri/SP
+            </div>
+          </div>
+
+          {/* Ações Globais */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+            <button
+              onClick={onOpenAlertPopup}
+              className="btn btn-secondary btn-sm"
+              style={{ color: '#F59E0B', borderColor: 'rgba(245, 158, 11, 0.4)' }}
+              title="Visualizar popup com alerta dos prazos"
+            >
+              <Bell size={15} />
+              <span>Ver Alertas de Prazos</span>
+            </button>
+
+            <button
+              onClick={handleExportAllToGoogleCalendar}
+              className="btn btn-outline-blue btn-sm"
+              title="Baixar arquivo de integração para o Google Agenda"
+            >
+              <CalendarPlus size={15} />
+              <span>Sincronizar Google Agenda (.ics)</span>
+            </button>
+
+            <button
+              onClick={() => { setEditingClient(null); setIsClientModalOpen(true); }}
+              className="btn btn-ruby btn-sm"
+            >
+              <Plus size={15} />
+              <span>Novo Cliente</span>
+            </button>
+          </div>
+        </div>
+
+        {/* KPIs Cards */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '16px',
+          marginBottom: '28px'
+        }}>
+          <div className="glass-panel" style={{ padding: '18px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <span style={{ fontSize: '0.78rem', color: '#94A3B8', fontWeight: 700, textTransform: 'uppercase' }}>
+                Clientes Ativos
+              </span>
+              <Users size={16} color="#38BDF8" />
+            </div>
+            <div className="mono" style={{ fontSize: '1.8rem', fontWeight: 800, color: '#FFFFFF', margin: '6px 0' }}>
+              {totalClientes}
+            </div>
+            <div style={{ fontSize: '0.74rem', color: '#94A3B8' }}>
+              Carteira real gerenciada
+            </div>
+          </div>
+
+          <div className="glass-panel" style={{ padding: '18px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <span style={{ fontSize: '0.78rem', color: '#94A3B8', fontWeight: 700, textTransform: 'uppercase' }}>
+                Entregas Concluídas
+              </span>
+              <CheckCircle2 size={16} color="#10B981" />
+            </div>
+            <div className="mono" style={{ fontSize: '1.8rem', fontWeight: 800, color: '#10B981', margin: '6px 0' }}>
+              {entregues} <span style={{ fontSize: '0.9rem', color: '#94A3B8' }}>/ {totalObrigacoes}</span>
+            </div>
+            <div style={{ fontSize: '0.74rem', color: '#10B981', fontWeight: 600 }}>
+              {percentualEntregue}% de conformidade
+            </div>
+          </div>
+
+          <div className="glass-panel" style={{ padding: '18px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <span style={{ fontSize: '0.78rem', color: '#94A3B8', fontWeight: 700, textTransform: 'uppercase' }}>
+                Pendentes a Entregar
+              </span>
+              <Clock size={16} color="#F59E0B" />
+            </div>
+            <div className="mono" style={{ fontSize: '1.8rem', fontWeight: 800, color: '#F59E0B', margin: '6px 0' }}>
+              {pendentes}
+            </div>
+            <div style={{ fontSize: '0.74rem', color: '#94A3B8' }}>
+              Conectadas com alertas
+            </div>
+          </div>
+
+          <div className="glass-panel" style={{ padding: '18px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <span style={{ fontSize: '0.78rem', color: '#94A3B8', fontWeight: 700, textTransform: 'uppercase' }}>
+                Atrasadas
+              </span>
+              <AlertTriangle size={16} color="#EF4444" />
+            </div>
+            <div className="mono" style={{ fontSize: '1.8rem', fontWeight: 800, color: atrasados > 0 ? '#EF4444' : '#10B981', margin: '6px 0' }}>
+              {atrasados}
+            </div>
+            <div style={{ fontSize: '0.74rem', color: atrasados > 0 ? '#EF4444' : '#10B981' }}>
+              {atrasados > 0 ? 'Prioridade de entrega' : 'Nenhuma em atraso'}
+            </div>
+          </div>
+        </div>
+
+        {/* Abas */}
+        <div style={{
+          display: 'flex',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+          marginBottom: '24px',
+          gap: '8px'
+        }}>
+          {[
+            { id: 'obrigacoes', label: 'Obrigações Fiscais (Google Calendar)', icon: <FileText size={15} /> },
+            { id: 'clientes', label: 'Cadastro de Clientes Reais', icon: <Building2 size={15} /> },
+            { id: 'demonstrativos', label: 'Emissão DRE & Balanço', icon: <BarChart3 size={15} /> }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '10px 18px',
+                backgroundColor: 'transparent',
+                border: 'none',
+                borderBottom: activeTab === tab.id ? '3px solid #C81E3D' : '3px solid transparent',
+                color: activeTab === tab.id ? '#FFFFFF' : '#94A3B8',
+                fontWeight: activeTab === tab.id ? 700 : 500,
+                fontSize: '0.92rem',
+                cursor: 'pointer'
+              }}
+            >
+              {tab.icon}
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* ========================================================
+            ABA 1: MATRIZ DE OBRIGAÇÕES COM GOOGLE AGENDA
+           ======================================================== */}
+        {activeTab === 'obrigacoes' && (
+          <div className="glass-panel" style={{ padding: '24px' }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '14px',
+              marginBottom: '20px'
+            }}>
+              <div style={{ position: 'relative', minWidth: '260px', flex: 1 }}>
+                <Search size={15} color="#94A3B8" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+                <input
+                  type="text"
+                  className="form-control"
+                  style={{ paddingLeft: '36px', fontSize: '0.86rem' }}
+                  placeholder="Buscar por Empresa, CNPJ ou Obrigação..."
+                  value={termoBusca}
+                  onChange={(e) => setTermoBusca(e.target.value)}
+                />
+              </div>
+
+              <select
+                className="form-control"
+                style={{ padding: '8px 12px', fontSize: '0.84rem', width: 'auto' }}
+                value={filtroRegime}
+                onChange={(e) => setFiltroRegime(e.target.value)}
+              >
+                <option value="Todos">Todos os Regimes</option>
+                <option value="Simples Nacional">Simples Nacional</option>
+                <option value="Lucro Presumido">Lucro Presumido</option>
+                <option value="Lucro Real">Lucro Real</option>
+              </select>
+
+              <select
+                className="form-control"
+                style={{ padding: '8px 12px', fontSize: '0.84rem', width: 'auto' }}
+                value={filtroStatus}
+                onChange={(e) => setFiltroStatus(e.target.value)}
+              >
+                <option value="Todos">Todos os Status</option>
+                <option value="Entregue">🟢 Entregues</option>
+                <option value="Pendente">🟡 Pendentes</option>
+                <option value="Atrasado">🔴 Atrasados</option>
+              </select>
+
+              <button
+                onClick={() => setShowAddObligationForm(!showAddObligationForm)}
+                className="btn btn-secondary btn-sm"
+              >
+                <Plus size={14} />
+                <span>{showAddObligationForm ? 'Fechar' : '+ Nova Obrigação'}</span>
+              </button>
+            </div>
+
+            {/* Formulário de Nova Obrigação */}
+            {showAddObligationForm && (
+              <form onSubmit={handleCreateObligation} style={{
+                backgroundColor: 'rgba(200, 30, 61, 0.08)',
+                border: '1px solid rgba(200, 30, 61, 0.25)',
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '20px'
+              }}>
+                <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#FFFFFF', marginBottom: '10px' }}>
+                  Lançar Obrigação para Monitoramento
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
+                  <div>
+                    <label className="form-label">Cliente</label>
+                    <select
+                      className="form-control"
+                      value={newObData.clienteId}
+                      onChange={(e) => setNewObData({ ...newObData, clienteId: e.target.value })}
+                    >
+                      {clients.map(c => (
+                        <option key={c.id} value={c.id}>{c.razaoSocial}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="form-label">Obrigação</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Ex: DCTFWeb, PGDAS-D"
+                      value={newObData.obrigacao}
+                      onChange={(e) => setNewObData({ ...newObData, obrigacao: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="form-label">Competência</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="10/2026"
+                      value={newObData.competencia}
+                      onChange={(e) => setNewObData({ ...newObData, competencia: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="form-label">Data de Vencimento</label>
+                    <input
+                      type="date"
+                      className="form-control"
+                      value={newObData.vencimento}
+                      onChange={(e) => setNewObData({ ...newObData, vencimento: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '12px' }}>
+                  <button type="submit" className="btn btn-ruby btn-sm">
+                    Salvar e Conectar ao Calendário
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Tabela de Obrigações */}
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.86rem' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.12)', color: '#94A3B8' }}>
+                    <th style={{ padding: '10px 12px' }}>Empresa / CNPJ</th>
+                    <th style={{ padding: '10px 12px' }}>Regime</th>
+                    <th style={{ padding: '10px 12px' }}>Obrigação Fiscal</th>
+                    <th style={{ padding: '10px 12px' }}>Competência</th>
+                    <th style={{ padding: '10px 12px' }}>Vencimento</th>
+                    <th style={{ padding: '10px 12px' }}>Status</th>
+                    <th style={{ padding: '10px 12px' }}>Recibo / Protocolo</th>
+                    <th style={{ padding: '10px 12px', textAlign: 'right' }}>Google Agenda / Baixa</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {obrigacoesFiltradas.length === 0 ? (
+                    <tr>
+                      <td colSpan="8" style={{ padding: '28px', textAlign: 'center', color: '#94A3B8' }}>
+                        Nenhuma obrigação encontrada.
+                      </td>
+                    </tr>
+                  ) : (
+                    obrigacoesFiltradas.map((ob) => {
+                      const googleCalendarUrl = generateGoogleCalendarUrl(ob);
+
+                      return (
+                        <tr 
+                          key={ob.id}
+                          style={{
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                            transition: 'background-color 0.2s'
+                          }}
+                        >
+                          <td style={{ padding: '12px' }}>
+                            <div style={{ fontWeight: 600, color: '#FFFFFF' }}>{ob.clienteNome}</div>
+                            <div className="mono" style={{ fontSize: '0.76rem', color: '#94A3B8' }}>{ob.cnpj}</div>
+                          </td>
+
+                          <td style={{ padding: '12px' }}>
+                            <span style={{ fontSize: '0.74rem', color: '#CBD5E1' }}>{ob.regime}</span>
+                          </td>
+
+                          <td style={{ padding: '12px' }}>
+                            <strong style={{ color: '#F8FAFC' }}>{ob.obrigacao}</strong>
+                          </td>
+
+                          <td style={{ padding: '12px' }}>
+                            <span className="mono">{ob.competencia}</span>
+                          </td>
+
+                          <td style={{ padding: '12px' }}>
+                            <div className="mono" style={{ fontWeight: 600, color: ob.status === 'Atrasado' ? '#EF4444' : '#FFFFFF' }}>
+                              {ob.vencimento.split('-').reverse().join('/')}
+                            </div>
+                          </td>
+
+                          <td style={{ padding: '12px' }}>
+                            {getStatusBadge(ob.status)}
+                          </td>
+
+                          <td style={{ padding: '12px' }}>
+                            {ob.protocolo ? (
+                              <span className="mono" style={{ fontSize: '0.75rem', color: '#10B981', backgroundColor: 'rgba(16, 185, 129, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                                {ob.protocolo}
+                              </span>
+                            ) : (
+                              <span style={{ fontSize: '0.75rem', color: '#64748B' }}>Pendente</span>
+                            )}
+                          </td>
+
+                          <td style={{ padding: '12px', textAlign: 'right' }}>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                              <a
+                                href={googleCalendarUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title="Adicionar ao Google Agenda"
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  padding: '5px 8px',
+                                  borderRadius: '4px',
+                                  backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                                  border: '1px solid rgba(56, 189, 248, 0.3)',
+                                  color: '#38BDF8',
+                                  textDecoration: 'none',
+                                  fontSize: '0.76rem',
+                                  fontWeight: 600
+                                }}
+                              >
+                                <Calendar size={12} />
+                                <span>Google Agenda</span>
+                              </a>
+
+                              <button
+                                onClick={() => { setSelectedObligation(ob); setIsProtocolModalOpen(true); }}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  padding: '5px 8px',
+                                  borderRadius: '4px',
+                                  backgroundColor: 'rgba(200, 30, 61, 0.15)',
+                                  border: '1px solid rgba(200, 30, 61, 0.35)',
+                                  color: '#FFFFFF',
+                                  fontSize: '0.76rem',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                <CheckCircle2 size={12} color="#C81E3D" />
+                                <span>Baixa</span>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================
+            ABA 2: CARTEIRA DE CLIENTES
+           ======================================================== */}
+        {activeTab === 'clientes' && (
+          <div className="glass-panel" style={{ padding: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
+              <div>
+                <h3 style={{ fontSize: '1.2rem', color: '#FFFFFF' }}>Empresas Cadastradas</h3>
+                <div style={{ fontSize: '0.82rem', color: '#94A3B8' }}>
+                  Carteira oficial da Y7 Service (cadastre seus clientes reais abaixo)
+                </div>
+              </div>
+
+              <button
+                onClick={() => { setEditingClient(null); setIsClientModalOpen(true); }}
+                className="btn btn-ruby btn-sm"
+              >
+                <Plus size={14} />
+                <span>+ Cadastrar Cliente Real</span>
+              </button>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gap: '16px'
+            }}>
+              {clients.map((cli) => {
+                const pendentesCli = obligations.filter(o => o.clienteId === cli.id && o.status !== 'Entregue').length;
+
+                return (
+                  <div
+                    key={cli.id}
+                    style={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '8px',
+                      padding: '18px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between'
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                        <span style={{
+                          fontSize: '0.72rem',
+                          fontWeight: 700,
+                          color: '#38BDF8',
+                          backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                          padding: '3px 8px',
+                          borderRadius: '4px'
+                        }}>
+                          {cli.regime}
+                        </span>
+
+                        <span style={{ fontSize: '0.74rem', color: pendentesCli > 0 ? '#F59E0B' : '#10B981', fontWeight: 600 }}>
+                          {pendentesCli > 0 ? `⚠️ ${pendentesCli} pendente(s)` : '🟢 100% em dia'}
+                        </span>
+                      </div>
+
+                      <h4 style={{ fontSize: '1.05rem', color: '#FFFFFF', marginBottom: '4px' }}>
+                        {cli.razaoSocial}
+                      </h4>
+                      <div className="mono" style={{ fontSize: '0.78rem', color: '#94A3B8', marginBottom: '10px' }}>
+                        CNPJ: {cli.cnpj}
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.8rem', color: '#CBD5E1' }}>
+                        <div><strong>Responsável:</strong> {cli.responsavel}</div>
+                        <div><strong>E-mail:</strong> {cli.email}</div>
+                        <div><strong>Telefone:</strong> {cli.telefone}</div>
+                      </div>
+                    </div>
+
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'flex-end',
+                      gap: '8px',
+                      marginTop: '16px',
+                      paddingTop: '12px',
+                      borderTop: '1px solid rgba(255, 255, 255, 0.06)'
+                    }}>
+                      <button
+                        onClick={() => { setEditingClient(cli); setIsClientModalOpen(true); }}
+                        className="btn btn-secondary btn-sm"
+                        style={{ padding: '5px 8px' }}
+                        title="Editar"
+                      >
+                        <Edit3 size={12} />
+                      </button>
+
+                      {cli.id !== 'cli-y7' && (
+                        <button
+                          onClick={() => handleDeleteClient(cli.id)}
+                          className="btn btn-secondary btn-sm"
+                          style={{ padding: '5px 8px', color: '#EF4444' }}
+                          title="Remover"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================
+            ABA 3: EMISSÃO DE DRE & BALANÇO
+           ======================================================== */}
+        {activeTab === 'demonstrativos' && (
+          <div className="glass-panel" style={{ padding: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '14px' }}>
+              <div>
+                <h3 style={{ fontSize: '1.25rem', color: '#FFFFFF' }}>Emissão de Demonstrativos Oficiais</h3>
+                <div style={{ fontSize: '0.82rem', color: '#94A3B8' }}>
+                  Balanço Patrimonial e DRE com chancela da Y7 Service
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <select
+                  className="form-control"
+                  style={{ width: 'auto', fontSize: '0.86rem' }}
+                  value={selectedClientForReport}
+                  onChange={(e) => setSelectedClientForReport(e.target.value)}
+                >
+                  {clients.map(c => (
+                    <option key={c.id} value={c.id}>{c.razaoSocial}</option>
+                  ))}
+                </select>
+
+                <button 
+                  onClick={() => window.print()}
+                  className="btn btn-ruby btn-sm"
+                >
+                  <Printer size={15} />
+                  <span>Imprimir Demonstrativo</span>
+                </button>
+              </div>
+            </div>
+
+            <div style={{
+              backgroundColor: '#0a0f1d',
+              borderRadius: '8px',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              padding: '24px'
+            }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                borderBottom: '2px solid #C81E3D',
+                paddingBottom: '16px',
+                marginBottom: '20px'
+              }}>
+                <div>
+                  <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#FFFFFF' }}>
+                    Y7 SERVICE LTDA
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: '#94A3B8' }}>
+                    Assessoria Contábil, Fiscal & Societária • Alphaville, Barueri/SP • CNPJ: {Y7_INFO.cnpj}
+                  </div>
+                </div>
+
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '1rem', fontWeight: 700, color: '#FFFFFF' }}>
+                    {clients.find(c => c.id === selectedClientForReport)?.razaoSocial || clients[0]?.razaoSocial}
+                  </div>
+                  <div className="mono" style={{ fontSize: '0.8rem', color: '#38BDF8' }}>
+                    CNPJ: {clients.find(c => c.id === selectedClientForReport)?.cnpj || clients[0]?.cnpj}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '4px' }}>
+                  <span>RECEITA OPERACIONAL BRUTA</span>
+                  <span className="mono" style={{ fontWeight: 700 }}>R$ 1.850.000,00</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px' }}>
+                  <span style={{ color: '#94A3B8' }}>(-) Impostos sobre Faturamento</span>
+                  <span className="mono" style={{ color: '#EF4444' }}>- R$ 175.750,00</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '4px' }}>
+                  <strong>(=) RECEITA OPERACIONAL LÍQUIDA</strong>
+                  <span className="mono" style={{ fontWeight: 700 }}>R$ 1.674.250,00</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px' }}>
+                  <span style={{ color: '#94A3B8' }}>(-) Custos Operacionais</span>
+                  <span className="mono" style={{ color: '#EF4444' }}>- R$ 740.000,00</span>
+                </div>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  padding: '12px 16px',
+                  backgroundColor: 'rgba(200, 30, 61, 0.18)',
+                  border: '1px solid rgba(200, 30, 61, 0.4)',
+                  borderRadius: '6px'
+                }}>
+                  <strong style={{ color: '#FFFFFF' }}>
+                    (=) LUCRO LÍQUIDO DO EXERCÍCIO
+                  </strong>
+                  <span className="mono" style={{ fontSize: '1.15rem', fontWeight: 800, color: '#34D399' }}>
+                    R$ 554.250,00
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <ClientModal
+        isOpen={isClientModalOpen}
+        onClose={() => setIsClientModalOpen(false)}
+        onSave={handleSaveClient}
+        editingClient={editingClient}
+      />
+
+      <ProtocolModal
+        isOpen={isProtocolModalOpen}
+        onClose={() => setIsProtocolModalOpen(false)}
+        onConfirm={handleUpdateObligation}
+        obligation={selectedObligation}
+      />
+    </div>
+  );
+}

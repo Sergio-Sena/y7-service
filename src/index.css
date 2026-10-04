@@ -1,0 +1,355 @@
+/* ====================================================================
+   Y7 SERVICE LTDA - SISTEMA DE CONTABILIDADE E GESTÃO ESTRATÉGICA
+   Design System Limpo, Profissional, Menos é Mais e 100% Responsivo
+   ==================================================================== */
+
+:root {
+  --bg-deep: #080d1a;
+  --bg-card: #0d1527;
+  --bg-card-hover: #121c33;
+  --bg-elevated: #111d35;
+  --bg-input: #0a1122;
+  
+  --primary-navy: #0D1B2A;
+  --primary-border: rgba(255, 255, 255, 0.12);
+  --primary-border-hover: rgba(200, 30, 61, 0.5);
+  
+  --accent-ruby: #C81E3D;
+  --accent-ruby-hover: #b01833;
+  --accent-crimson: #E11D48;
+  
+  --accent-blue: #38BDF8;
+  --accent-blue-hover: #0284C7;
+  
+  --text-main: #FFFFFF;
+  --text-body: #E2E8F0;
+  --text-muted: #CBD5E1;
+  --text-dim: #94A3B8;
+  
+  --status-entregue: #10B981;
+  --status-entregue-bg: rgba(16, 185, 129, 0.16);
+  --status-pendente: #F59E0B;
+  --status-pendente-bg: rgba(245, 158, 11, 0.16);
+  --status-andamento: #38BDF8;
+  --status-andamento-bg: rgba(56, 189, 248, 0.16);
+  --status-atrasado: #EF4444;
+  --status-atrasado-bg: rgba(239, 68, 68, 0.2);
+
+  --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-deep);
+  color: var(--text-body);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-image: 
+    radial-gradient(circle at 15% 15%, rgba(200, 30, 61, 0.05) 0%, transparent 45%),
+    radial-gradient(circle at 85% 25%, rgba(56, 189, 248, 0.04) 0%, transparent 45%);
+  background-attachment: fixed;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-deep);
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-ruby);
+}
+
+/* Tipografia */
+h1, h2, h3, h4 {
+  color: #FFFFFF;
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+p {
+  color: var(--text-body);
+  font-size: 1rem;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+/* Painel de Conteúdo */
+.glass-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--primary-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  transition: all 0.25s ease;
+}
+
+.glass-panel:hover {
+  border-color: var(--primary-border-hover);
+}
+
+.container {
+  max-width: 1220px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Botões */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 24px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.96rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  border: none;
+  box-sizing: border-box;
+}
+
+.btn-block {
+  width: 100%;
+  display: flex;
+}
+
+.btn-ruby {
+  background-color: var(--accent-ruby);
+  color: #FFFFFF;
+}
+.btn-ruby:hover {
+  background-color: var(--accent-ruby-hover);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
+  border: 1px solid var(--primary-border);
+}
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.btn-outline-blue {
+  background: transparent;
+  color: var(--accent-blue);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+}
+.btn-outline-blue:hover {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: var(--accent-blue);
+}
+
+.btn-sm {
+  padding: 8px 14px;
+  font-size: 0.88rem;
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge-entregue {
+  background: var(--status-entregue-bg);
+  color: var(--status-entregue);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.badge-pendente {
+  background: var(--status-pendente-bg);
+  color: var(--status-pendente);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.badge-andamento {
+  background: var(--status-andamento-bg);
+  color: var(--status-andamento);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+}
+
+.badge-atrasado {
+  background: var(--status-atrasado-bg);
+  color: var(--status-atrasado);
+  border: 1px solid rgba(239, 68, 68, 0.45);
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.modal-content {
+  background: #0d1527;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-md);
+  max-width: 600px;
+  width: 100%;
+  max-height: 92vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+  padding: 24px;
+}
+
+/* Inputs e Formulários */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.form-label {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #E2E8F0;
+}
+
+.form-control {
+  background: var(--bg-input);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-sm);
+  color: #FFFFFF;
+  padding: 12px 14px;
+  font-size: 0.96rem;
+  font-family: inherit;
+  width: 100%;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--accent-ruby);
+  box-shadow: 0 0 0 2px rgba(200, 30, 61, 0.3);
+}
+
+select.form-control option {
+  background: #0d1527;
+  color: #FFFFFF;
+}
+
+/* =======================================================
+   RESPONSIVIDADE MOBILE COMPLETA
+   ======================================================= */
+@media (max-width: 768px) {
+  body {
+    font-size: 0.95rem;
+  }
+
+  .container {
+    padding: 0 16px;
+  }
+
+  .hide-mobile {
+    display: none !important;
+  }
+
+  /* Ajuste de seções */
+  section {
+    padding: 50px 0 !important;
+  }
+
+  /* Ajuste de Hero no celular */
+  h1 {
+    font-size: 2rem !important;
+    line-height: 1.25 !important;
+    text-align: center;
+  }
+
+  p {
+    font-size: 0.96rem !important;
+    text-align: center;
+  }
+
+  .hero-buttons {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+
+  .hero-buttons .btn {
+    width: 100% !important;
+    flex: none !important;
+  }
+
+  .hero-grid {
+    grid-template-columns: 1fr !important;
+    gap: 30px !important;
+    text-align: center;
+  }
+
+  .hero-logo-box {
+    max-width: 300px !important;
+    margin: 0 auto;
+  }
+
+  /* Cards e painéis no celular */
+  .glass-panel {
+    padding: 20px !important;
+  }
+
+  /* Ajuste de barras de gráfico no celular */
+  .chart-bars-container {
+    overflow-x: auto;
+    padding-bottom: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 1.75rem !important;
+  }
+
+  .btn {
+    padding: 12px 18px;
+    font-size: 0.92rem;
+  }
+
+  .modal-content {
+    padding: 18px !important;
+  }
+}
