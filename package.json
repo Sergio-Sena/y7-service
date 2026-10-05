@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "push": "git push origin main",
+    "sync": "git add . && git commit -m \"update Y7 Service\" && git push origin main"
   },
   "dependencies": {
     "lucide-react": "^1.50.0",
