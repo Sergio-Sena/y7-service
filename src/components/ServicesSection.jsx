@@ -97,7 +97,7 @@ export default function ServicesSection() {
         {/* Grid de Serviços */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(330px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
           gap: '24px'
         }}>
           {services.map((item) => (

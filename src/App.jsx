@@ -8,8 +8,9 @@ import AdminDashboard from './components/AdminDashboard';
 import Footer from './components/Footer';
 import LoginModal from './components/LoginModal';
 import ObligationAlertPopup from './components/ObligationAlertPopup';
-
-import { INITIAL_CLIENTS, INITIAL_OBLIGATIONS_RECORD } from './data/initialData';
+import { supabase } from './lib/supabase';
+import { fetchClientes, fetchObrigacoes, saveCliente, deleteCliente, saveObrigacao, deleteObrigacao } from './lib/db';
+import { INITIAL_CLIENTS } from './data/initialData';
 
 export default function App() {
   const [currentView, setCurrentView] = useState('site'); // 'site' ou 'admin'
@@ -19,46 +20,30 @@ export default function App() {
   const [adminTab, setAdminTab] = useState('obrigacoes');
   const [pendingTabAfterLogin, setPendingTabAfterLogin] = useState(null);
 
-  // Autenticação oficial: Admind / Admin1307
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return sessionStorage.getItem('y7_auth') === 'true';
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [clients, setClients] = useState(INITIAL_CLIENTS);
+  const [obligations, setObligations] = useState([]);
 
-  // Clientes: Carrega apenas a matriz ou o que o usuário cadastrou (sem dados inventados)
-  const [clients, setClients] = useState(() => {
-    const saved = localStorage.getItem('y7_clients_v2');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      } catch (e) {
-        console.error('Erro ao ler clientes', e);
-      }
-    }
-    return INITIAL_CLIENTS;
-  });
-
-  // Obrigações: Inicia limpo para alimentação manual pelos contadores
-  const [obligations, setObligations] = useState(() => {
-    const saved = localStorage.getItem('y7_obligations_v3');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
-      } catch (e) {
-        console.error('Erro ao ler obrigações', e);
-      }
-    }
-    return INITIAL_OBLIGATIONS_RECORD;
-  });
-
+  // Sessão Supabase Auth
   useEffect(() => {
-    localStorage.setItem('y7_clients_v2', JSON.stringify(clients));
-  }, [clients]);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setIsAuthenticated(true);
+        loadData();
+      }
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+      if (session) loadData();
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
-  useEffect(() => {
-    localStorage.setItem('y7_obligations_v3', JSON.stringify(obligations));
-  }, [obligations]);
+  async function loadData() {
+    const [cls, obs] = await Promise.all([fetchClientes(), fetchObrigacoes()]);
+    setClients(cls.length > 0 ? cls : INITIAL_CLIENTS);
+    setObligations(obs);
+  }
 
   // Ação de Login Geral
   const handleLoginClick = (targetTab = 'obrigacoes') => {
@@ -79,23 +64,16 @@ export default function App() {
   };
 
   const handleLoginSuccess = () => {
-    setIsAuthenticated(true);
-    sessionStorage.setItem('y7_auth', 'true');
     const targetTab = pendingTabAfterLogin || 'obrigacoes';
     setAdminTab(targetTab);
     setPendingTabAfterLogin(null);
     setCurrentView('admin');
-    
-    if (targetTab === 'obrigacoes') {
-      setTimeout(() => {
-        setIsAlertPopupOpen(true);
-      }, 400);
-    }
+    if (targetTab === 'obrigacoes') setTimeout(() => setIsAlertPopupOpen(true), 400);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     setIsAuthenticated(false);
-    sessionStorage.removeItem('y7_auth');
     setCurrentView('site');
   };
 
@@ -133,6 +111,10 @@ export default function App() {
             activeTab={adminTab}
             setActiveTab={setAdminTab}
             onOpenAlertPopup={() => setIsAlertPopupOpen(true)}
+            saveCliente={saveCliente}
+            deleteCliente={deleteCliente}
+            saveObrigacao={saveObrigacao}
+            deleteObrigacao={deleteObrigacao}
           />
         )}
       </main>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Building2, 
   Users, 
@@ -15,8 +15,12 @@ import {
   Trash2, 
   Edit3,
   Bell,
-  Printer
+  Printer,
+  UserCog,
+  Mail,
+  ShieldCheck
 } from 'lucide-react';
+import { fetchUsuarios, saveUsuario, deleteUsuario } from '../lib/db';
 import { Y7_INFO } from '../data/initialData';
 import { generateGoogleCalendarUrl, exportToIcsCalendar } from '../utils/googleCalendar';
 import ClientModal from './ClientModal';
@@ -30,7 +34,11 @@ export default function AdminDashboard({
   setObligations,
   onOpenAlertPopup,
   activeTab: propActiveTab,
-  setActiveTab: propSetActiveTab
+  setActiveTab: propSetActiveTab,
+  saveCliente,
+  deleteCliente,
+  saveObrigacao,
+  deleteObrigacao
 }) {
   const [localActiveTab, setLocalActiveTab] = useState('obrigacoes');
   const activeTab = propActiveTab || localActiveTab;
@@ -48,6 +56,33 @@ export default function AdminDashboard({
 
   // Cliente selecionado para demonstrativo
   const [selectedClientForReport, setSelectedClientForReport] = useState(clients[0]?.id || '');
+
+  // Usuários
+  const [usuarios, setUsuarios] = useState([]);
+  const [novoUsuario, setNovoUsuario] = useState({ nome: '', email: '', perfil: 'contador' });
+  const [showUserForm, setShowUserForm] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'usuarios') {
+      fetchUsuarios().then(setUsuarios).catch(() => {});
+    }
+  }, [activeTab]);
+
+  const handleSaveUsuario = async (e) => {
+    e.preventDefault();
+    await saveUsuario(novoUsuario);
+    const lista = await fetchUsuarios();
+    setUsuarios(lista);
+    setNovoUsuario({ nome: '', email: '', perfil: 'contador' });
+    setShowUserForm(false);
+  };
+
+  const handleDeleteUsuario = async (id) => {
+    if (window.confirm('Remover este usuário?')) {
+      await deleteUsuario(id);
+      setUsuarios(usuarios.filter(u => u.id !== id));
+    }
+  };
 
   // Nova obrigação rápida
   const [showAddObligationForm, setShowAddObligationForm] = useState(false);
@@ -79,7 +114,8 @@ export default function AdminDashboard({
     return matchRegime && matchStatus && matchBusca;
   });
 
-  const handleSaveClient = (clientData) => {
+  const handleSaveClient = async (clientData) => {
+    await saveCliente(clientData);
     if (editingClient) {
       setClients(clients.map(c => c.id === clientData.id ? clientData : c));
     } else {
@@ -88,18 +124,20 @@ export default function AdminDashboard({
     setEditingClient(null);
   };
 
-  const handleDeleteClient = (id) => {
+  const handleDeleteClient = async (id) => {
     if (window.confirm('Deseja realmente remover este cliente e suas obrigações?')) {
+      await deleteCliente(id);
       setClients(clients.filter(c => c.id !== id));
       setObligations(obligations.filter(o => o.clienteId !== id));
     }
   };
 
-  const handleUpdateObligation = (updated) => {
+  const handleUpdateObligation = async (updated) => {
+    await saveObrigacao(updated);
     setObligations(obligations.map(o => o.id === updated.id ? updated : o));
   };
 
-  const handleCreateObligation = (e) => {
+  const handleCreateObligation = async (e) => {
     e.preventDefault();
     const cliente = clients.find(c => c.id === newObData.clienteId);
     if (!cliente) return;
@@ -120,6 +158,7 @@ export default function AdminDashboard({
       observacao: newObData.observacao
     };
 
+    await saveObrigacao(nova);
     setObligations([nova, ...obligations]);
     setShowAddObligationForm(false);
   };
@@ -173,7 +212,7 @@ export default function AdminDashboard({
                 PAINEL DO CONTADOR
               </span>
               <span style={{ fontSize: '0.82rem', color: '#94A3B8' }}>
-                Usuário Conectado: <strong>Admind</strong>
+                Usuário Conectado: <strong>Admin</strong>
               </span>
             </div>
             <h1 style={{ fontSize: '2rem', color: '#FFFFFF', marginTop: '4px' }}>
@@ -293,7 +332,8 @@ export default function AdminDashboard({
           {[
             { id: 'obrigacoes', label: 'Obrigações Fiscais (Google Calendar)', icon: <FileText size={15} /> },
             { id: 'clientes', label: 'Cadastro de Clientes Reais', icon: <Building2 size={15} /> },
-            { id: 'demonstrativos', label: 'Emissão DRE & Balanço', icon: <BarChart3 size={15} /> }
+            { id: 'demonstrativos', label: 'Emissão DRE & Balanço', icon: <BarChart3 size={15} /> },
+            { id: 'usuarios', label: 'Usuários do Sistema', icon: <UserCog size={15} /> }
           ].map(tab => (
             <button
               key={tab.id}
@@ -699,6 +739,103 @@ export default function AdminDashboard({
            ======================================================== */}
         {activeTab === 'demonstrativos' && (
           <FinancialStatementsEditor clients={clients} />
+        )}
+
+        {/* ========================================================
+            ABA 4: USUÁRIOS DO SISTEMA
+           ======================================================== */}
+        {activeTab === 'usuarios' && (
+          <div className="glass-panel" style={{ padding: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
+              <div>
+                <h3 style={{ fontSize: '1.2rem', color: '#FFFFFF' }}>Usuários do Sistema</h3>
+                <div style={{ fontSize: '0.82rem', color: '#94A3B8' }}>Contadores e colaboradores com acesso ao painel</div>
+              </div>
+              <button onClick={() => setShowUserForm(!showUserForm)} className="btn btn-ruby btn-sm">
+                <Plus size={14} />
+                <span>{showUserForm ? 'Fechar' : '+ Novo Usuário'}</span>
+              </button>
+            </div>
+
+            {showUserForm && (
+              <form onSubmit={handleSaveUsuario} style={{
+                backgroundColor: 'rgba(200, 30, 61, 0.08)',
+                border: '1px solid rgba(200, 30, 61, 0.25)',
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '20px'
+              }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
+                  <div>
+                    <label className="form-label">Nome</label>
+                    <input type="text" required className="form-control" placeholder="Nome completo"
+                      value={novoUsuario.nome} onChange={e => setNovoUsuario({ ...novoUsuario, nome: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="form-label">E-mail</label>
+                    <input type="email" required className="form-control" placeholder="email@y7service.com.br"
+                      value={novoUsuario.email} onChange={e => setNovoUsuario({ ...novoUsuario, email: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="form-label">Perfil</label>
+                    <select className="form-control" value={novoUsuario.perfil}
+                      onChange={e => setNovoUsuario({ ...novoUsuario, perfil: e.target.value })}>
+                      <option value="contador">Contador</option>
+                      <option value="admin">Administrador</option>
+                      <option value="assistente">Assistente</option>
+                    </select>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
+                  <button type="submit" className="btn btn-ruby btn-sm">Salvar Usuário</button>
+                </div>
+              </form>
+            )}
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+              {usuarios.length === 0 ? (
+                <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '36px', color: '#94A3B8' }}>
+                  <UserCog size={32} style={{ marginBottom: '10px', opacity: 0.4 }} />
+                  <div style={{ color: '#FFFFFF', fontWeight: 600, marginBottom: '6px' }}>Nenhum usuário cadastrado</div>
+                  <div style={{ fontSize: '0.84rem' }}>Adicione os contadores que terão acesso ao painel.</div>
+                </div>
+              ) : usuarios.map(u => (
+                <div key={u.id} style={{
+                  backgroundColor: 'rgba(255,255,255,0.02)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '8px',
+                  padding: '18px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <span style={{
+                      fontSize: '0.72rem', fontWeight: 700, color: '#38BDF8',
+                      backgroundColor: 'rgba(56,189,248,0.1)', padding: '3px 8px', borderRadius: '4px'
+                    }}>
+                      {u.perfil}
+                    </span>
+                    <span style={{ fontSize: '0.74rem', color: u.ativo ? '#10B981' : '#EF4444', fontWeight: 600 }}>
+                      {u.ativo ? '🟢 Ativo' : '🔴 Inativo'}
+                    </span>
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 600, color: '#FFFFFF', fontSize: '1rem' }}>{u.nome}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#94A3B8', marginTop: '4px' }}>
+                      <Mail size={12} />{u.email}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                    <button onClick={() => handleDeleteUsuario(u.id)}
+                      className="btn btn-secondary btn-sm" style={{ padding: '5px 8px', color: '#EF4444' }} title="Remover">
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
       </div>
 

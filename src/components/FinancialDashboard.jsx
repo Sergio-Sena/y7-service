@@ -44,7 +44,7 @@ export default function FinancialDashboard({ onOpenDemonstrativos }) {
         {/* Grade de Cards de KPIs Tecnológicos */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
           gap: '16px',
           marginBottom: '26px'
         }}>
@@ -99,7 +99,7 @@ export default function FinancialDashboard({ onOpenDemonstrativos }) {
         {/* Gráfico Tecnológico de DRE e Composição */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
           gap: '22px',
           marginBottom: '26px'
         }}>
@@ -336,7 +336,7 @@ export default function FinancialDashboard({ onOpenDemonstrativos }) {
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', width: '100%' }}>
             <button
               onClick={onOpenDemonstrativos}
               className="btn btn-ruby"
@@ -345,12 +345,14 @@ export default function FinancialDashboard({ onOpenDemonstrativos }) {
                 fontSize: '0.92rem',
                 display: 'inline-flex',
                 alignItems: 'center',
+                justifyContent: 'center',
                 gap: '8px',
-                boxShadow: '0 4px 15px rgba(200, 30, 61, 0.5)'
+                boxShadow: '0 4px 15px rgba(200, 30, 61, 0.5)',
+                width: '100%'
               }}
             >
               <FileEdit size={16} />
-              <span>Injetar Informações & Emitir em PDF</span>
+              <span>Emitir DRE &amp; Balanço em PDF</span>
             </button>
           </div>
         </div>

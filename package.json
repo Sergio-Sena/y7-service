@@ -12,6 +12,7 @@
     "sync": "git add . && git commit -m \"update Y7 Service\" && git push origin main"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.117.2",
     "lucide-react": "^1.50.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"

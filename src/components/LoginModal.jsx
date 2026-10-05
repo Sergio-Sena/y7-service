@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Lock, User, AlertCircle, CheckCircle2, Shield } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
   if (!isOpen) return null;
@@ -8,17 +9,22 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
   const [senha, setSenha] = useState('');
   const [erro, setErro] = useState('');
 
-  const handleSubmit = (e) => {
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setErro('');
-
-    const userTrim = usuario.trim();
-    // Credencial oficial fornecida: Login "Admind" e senha "Admin1307" (tolerante a case para evitar bloqueios)
-    if (userTrim.toLowerCase() === 'admind' && senha === 'Admin1307') {
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: usuario.trim(),
+      password: senha,
+    });
+    setLoading(false);
+    if (error) {
+      setErro('Usuário ou senha incorretos.');
+    } else {
       onLoginSuccess();
       onClose();
-    } else {
-      setErro('Usuário ou senha contábil incorretos. Utilize as credenciais de acesso.');
     }
   };
 
@@ -96,7 +102,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
               required 
               autoFocus
               className="form-control" 
-              placeholder="Digite seu usuário (Admind)"
+              placeholder="Digite seu usuário"
               value={usuario}
               onChange={(e) => setUsuario(e.target.value)}
             />
@@ -121,9 +127,10 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
             type="submit" 
             className="btn btn-ruby btn-block"
             style={{ padding: '14px', fontSize: '1rem' }}
+            disabled={loading}
           >
             <CheckCircle2 size={18} />
-            <span>Entrar no Painel do Contador</span>
+            <span>{loading ? 'Entrando...' : 'Entrar no Painel do Contador'}</span>
           </button>
 
           <div style={{ marginTop: '16px', textAlign: 'center', fontSize: '0.78rem', color: '#64748B' }}>

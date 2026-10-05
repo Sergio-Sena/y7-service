@@ -402,6 +402,10 @@ select.form-control option {
     display: none !important;
   }
 
+  .show-mobile {
+    display: flex !important;
+  }
+
   section {
     padding: 50px 0 !important;
   }
