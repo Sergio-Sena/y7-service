@@ -86,7 +86,7 @@ export default function App() {
           if (view === 'admin') {
             handleLoginClick();
           } else {
-            setCurrentView('site');
+            handleLogout();
           }
         }}
         isAuthenticated={isAuthenticated}
