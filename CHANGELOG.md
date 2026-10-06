@@ -2,11 +2,32 @@
 
 ## [Unreleased]
 ### Pendente
-- Integrar Supabase no App.jsx (substituir localStorage)
-- Migrar autenticação para Supabase Auth
-- Configurar AWS Amplify
-- Configurar GitHub Actions CI/CD
-- Configurar DNS no registro.br
+- GitHub Actions (esteira CI) — `.github/workflows/test-dev.yml`
+- Sentry para erros em produção
+
+---
+
+## [0.4.0] — 2026-10-05
+### Adicionado
+- Integração Supabase no `App.jsx` — localStorage substituído por `db.js`
+- Autenticação via Supabase Auth (`signInWithPassword`, `onAuthStateChange`, `signOut`)
+- Aba de Usuários do Sistema no painel admin (CRUD na tabela `usuarios`)
+- `context.md` e `CHANGELOG.md` criados
+- Deploy configurado no AWS Amplify (`d3pgghxxzqjef5`)
+- Domínio `www.y7service.com.br` configurado via CNAME no registro.br
+- Validação SSL via ACM (CNAME `_bb7d8b4dda...` no registro.br)
+- Redirecionamento `y7service.com.br` → `www.y7service.com.br` configurado no Amplify
+- Variáveis de ambiente configuradas no Amplify Console (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_SUPABASE_DB_PASS`)
+
+### Arquitetura de deploy
+| Item | Valor |
+|---|---|
+| Amplify App ID | `d3pgghxxzqjef5` |
+| Domínio | `www.y7service.com.br` |
+| CloudFront | `d1nsdxutuhwswx.cloudfront.net` |
+| Branch produção | `main` |
+| Upstream | `mouratoimportacao-cloud/y7-service` |
+| Origin | `Sergio-Sena/y7-service` |
 
 ---
 

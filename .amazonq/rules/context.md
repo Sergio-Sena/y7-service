@@ -11,15 +11,34 @@ Sistema de gestão fiscal interno + site institucional público da **Y7 Service 
 ## Repositórios
 - **Origin (produção):** `https://github.com/Sergio-Sena/y7-service.git`
 - **Upstream (cliente):** `https://github.com/mouratoimportacao-cloud/y7-service.git`
+- **Hosting:** AWS Amplify (`d3pgghxxzqjef5`)
+- **Domínio:** `y7service.com.br` (www via CNAME → Amplify/CloudFront)
 
-### Fluxo de upstream
-Sergio é leitor do upstream. Quando o cliente commitar no upstream, sincronizar manualmente:
+### Fluxo de trabalho
+
+**Cliente desenvolve no upstream:**
+```bash
+git checkout dev
+# faz alterações
+git add . && git commit -m "feat: descrição"
+git push origin dev
+# merge dev → main quando pronto
+```
+
+**Sergio sincroniza e deploya:**
 ```bash
 git fetch upstream
 git merge upstream/main
-# resolver conflitos se houver
 git push origin main
+# Amplify detecta push em main e deploya automaticamente (~2-3 min)
 ```
+
+### Regras
+- Sempre desenvolver em `dev` — nunca direto em `main`
+- Sincronizar antes de começar: `git fetch upstream && git merge upstream/dev`
+- Testar localmente com `npm run dev` antes do push
+- Commit messages: `feat:`, `fix:`, `docs:`, etc.
+- Nunca force push
 
 ## Supabase
 - Projeto: `y7-service`
