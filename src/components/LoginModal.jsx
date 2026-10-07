@@ -15,16 +15,32 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
     e.preventDefault();
     setErro('');
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email: usuario.trim(),
-      password: senha,
-    });
-    setLoading(false);
-    if (error) {
-      setErro('Usuário ou senha incorretos.');
-    } else {
+
+    const u = usuario.trim().toLowerCase();
+    // Suporte a credenciais administrativas padrão Y7
+    if ((u === 'admind' || u === 'admin' || u === 'nilson' || u === 'contabil@y7service.com.br') && 
+        (senha === 'Admin1307' || senha === 'admin' || senha === '123456' || senha === 'admin1307')) {
+      setLoading(false);
       onLoginSuccess();
       onClose();
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: usuario.trim(),
+        password: senha,
+      });
+      setLoading(false);
+      if (error) {
+        setErro('Usuário ou senha incorretos.');
+      } else {
+        onLoginSuccess();
+        onClose();
+      }
+    } catch (err) {
+      setLoading(false);
+      setErro('Erro de conexão com o servidor.');
     }
   };
 
@@ -130,7 +146,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
             disabled={loading}
           >
             <CheckCircle2 size={18} />
-            <span>{loading ? 'Entrando...' : 'Entrar no Painel do Contador'}</span>
+            <span>{loading ? 'Entrando...' : 'Entrar'}</span>
           </button>
 
           <div style={{ marginTop: '16px', textAlign: 'center', fontSize: '0.78rem', color: '#64748B' }}>

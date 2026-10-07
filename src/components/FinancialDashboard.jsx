@@ -1,13 +1,13 @@
 import React from 'react';
-import { Cpu, TrendingUp, ShieldCheck, Activity, Printer, FileEdit, FileSpreadsheet } from 'lucide-react';
+import { Cpu, TrendingUp, ShieldCheck, Activity } from 'lucide-react';
 import { DASHBOARD_METRICS } from '../data/initialData';
 
-export default function FinancialDashboard({ onOpenDemonstrativos }) {
+export default function FinancialDashboard() {
   const formatBRL = (val) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(val);
   };
 
-  const maxReceita = Math.max(...DASHBOARD_METRICS.evolucaoMensal.map(m => m.receita));
+  const maxReceita = Math.max(...DASHBOARD_METRICS.evolucaoMensal.map(m => m.receita), 1);
 
   return (
     <section id="dashboard-contabil" style={{ padding: '60px 0', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
@@ -308,8 +308,6 @@ export default function FinancialDashboard({ onOpenDemonstrativos }) {
             </div>
           </div>
         </div>
-
-
       </div>
     </section>
   );

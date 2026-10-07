@@ -84,7 +84,7 @@ export default function Footer({ onOpenAdmin }) {
               style={{ padding: '12px 16px', fontSize: '0.9rem' }}
             >
               <LogIn size={15} color="#38BDF8" />
-              <span>Login no Sistema</span>
+              <span>Login</span>
             </button>
           </div>
 

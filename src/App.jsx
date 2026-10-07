@@ -24,14 +24,25 @@ export default function App() {
   const [clients, setClients] = useState(INITIAL_CLIENTS);
   const [obligations, setObligations] = useState([]);
 
-  // Sessão Supabase Auth
+  // Carregamento de dados do banco e autenticação
   useEffect(() => {
+    // Limpeza de chaves legadas e carga inicial
+    try {
+      localStorage.removeItem('y7_empresa_cli-athene');
+      localStorage.removeItem('y7_fat_cli-athene');
+      localStorage.removeItem('y7_fin_cli-athene');
+      localStorage.removeItem('y7_fin_cli-y7');
+    } catch (e) {}
+
+    loadData();
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setIsAuthenticated(true);
         loadData();
       }
-    });
+    }).catch(() => {});
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthenticated(!!session);
       if (session) loadData();
@@ -40,9 +51,13 @@ export default function App() {
   }, []);
 
   async function loadData() {
-    const [cls, obs] = await Promise.all([fetchClientes(), fetchObrigacoes()]);
-    setClients(cls.length > 0 ? cls : INITIAL_CLIENTS);
-    setObligations(obs);
+    try {
+      const [cls, obs] = await Promise.all([fetchClientes(), fetchObrigacoes()]);
+      setClients(cls || []);
+      setObligations(obs || []);
+    } catch (e) {
+      console.warn('Erro ao carregar dados do banco:', e);
+    }
   }
 
   // Ação de Login Geral
@@ -99,7 +114,7 @@ export default function App() {
           <>
             <Hero />
             <ServicesSection />
-            <FinancialDashboard onOpenDemonstrativos={handleOpenDemonstrativos} />
+            <FinancialDashboard />
             <LocationSection />
           </>
         ) : (

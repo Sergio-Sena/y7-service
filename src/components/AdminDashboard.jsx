@@ -70,25 +70,17 @@ export default function AdminDashboard({
 
   const handleSaveUsuario = async (e) => {
     e.preventDefault();
-    try {
-      await saveUsuario(novoUsuario);
-      const lista = await fetchUsuarios();
-      setUsuarios(lista);
-      setNovoUsuario({ nome: '', email: '', perfil: 'contador' });
-      setShowUserForm(false);
-    } catch (err) {
-      alert('Erro ao salvar usuário. Tente novamente.');
-    }
+    await saveUsuario(novoUsuario);
+    const lista = await fetchUsuarios();
+    setUsuarios(lista);
+    setNovoUsuario({ nome: '', email: '', perfil: 'contador' });
+    setShowUserForm(false);
   };
 
   const handleDeleteUsuario = async (id) => {
     if (window.confirm('Remover este usuário?')) {
-      try {
-        await deleteUsuario(id);
-        setUsuarios(usuarios.filter(u => u.id !== id));
-      } catch (err) {
-        alert('Erro ao remover usuário. Tente novamente.');
-      }
+      await deleteUsuario(id);
+      setUsuarios(usuarios.filter(u => u.id !== id));
     }
   };
 
@@ -123,44 +115,36 @@ export default function AdminDashboard({
   });
 
   const handleSaveClient = async (clientData) => {
-    try {
-      await saveCliente(clientData);
-      if (editingClient) {
-        setClients(clients.map(c => c.id === clientData.id ? clientData : c));
-      } else {
-        setClients([clientData, ...clients]);
-      }
-      setEditingClient(null);
-    } catch (err) {
-      alert('Erro ao salvar cliente. Tente novamente.');
+    await saveCliente(clientData);
+    if (editingClient) {
+      setClients(clients.map(c => c.id === clientData.id ? clientData : c));
+    } else {
+      setClients([clientData, ...clients]);
     }
+    setEditingClient(null);
   };
 
   const handleDeleteClient = async (id) => {
     if (window.confirm('Deseja realmente remover este cliente e suas obrigações?')) {
-      try {
-        await deleteCliente(id);
-        setClients(clients.filter(c => c.id !== id));
-        setObligations(obligations.filter(o => o.clienteId !== id));
-      } catch (err) {
-        alert('Erro ao remover cliente. Tente novamente.');
-      }
+      await deleteCliente(id);
+      setClients(clients.filter(c => c.id !== id));
+      setObligations(obligations.filter(o => o.clienteId !== id));
     }
   };
 
   const handleUpdateObligation = async (updated) => {
-    try {
-      await saveObrigacao(updated);
-      setObligations(obligations.map(o => o.id === updated.id ? updated : o));
-    } catch (err) {
-      alert('Erro ao atualizar obrigação. Tente novamente.');
-    }
+    await saveObrigacao(updated);
+    setObligations(obligations.map(o => o.id === updated.id ? updated : o));
   };
 
   const handleCreateObligation = async (e) => {
     e.preventDefault();
-    const cliente = clients.find(c => c.id === newObData.clienteId);
-    if (!cliente) return;
+    const targetId = newObData.clienteId || clients[0]?.id;
+    const cliente = clients.find(c => c.id === targetId);
+    if (!cliente) {
+      alert('Cadastre pelo menos um cliente antes de lançar uma obrigação.');
+      return;
+    }
 
     const nova = {
       id: `ob-${Date.now()}`,
@@ -178,13 +162,9 @@ export default function AdminDashboard({
       observacao: newObData.observacao
     };
 
-    try {
-      await saveObrigacao(nova);
-      setObligations([nova, ...obligations]);
-      setShowAddObligationForm(false);
-    } catch (err) {
-      alert('Erro ao salvar obrigação. Tente novamente.');
-    }
+    await saveObrigacao(nova);
+    setObligations([nova, ...obligations]);
+    setShowAddObligationForm(false);
   };
 
   const handleExportAllToGoogleCalendar = () => {
@@ -296,7 +276,7 @@ export default function AdminDashboard({
               {totalClientes}
             </div>
             <div style={{ fontSize: '0.74rem', color: '#94A3B8' }}>
-              Carteira real gerenciada
+              Empresas ativas gerenciadas
             </div>
           </div>
 
@@ -355,7 +335,7 @@ export default function AdminDashboard({
         }}>
           {[
             { id: 'obrigacoes', label: 'Obrigações Fiscais (Google Calendar)', icon: <FileText size={15} /> },
-            { id: 'clientes', label: 'Cadastro de Clientes Reais', icon: <Building2 size={15} /> },
+            { id: 'clientes', label: 'Cadastro de Clientes', icon: <Building2 size={15} /> },
             { id: 'demonstrativos', label: 'Emissão DRE & Balanço', icon: <BarChart3 size={15} /> },
             { id: 'usuarios', label: 'Usuários do Sistema', icon: <UserCog size={15} /> }
           ].map(tab => (
@@ -457,12 +437,16 @@ export default function AdminDashboard({
                     <label className="form-label">Cliente</label>
                     <select
                       className="form-control"
-                      value={newObData.clienteId}
+                      value={newObData.clienteId || clients[0]?.id || ''}
                       onChange={(e) => setNewObData({ ...newObData, clienteId: e.target.value })}
                     >
-                      {clients.map(c => (
-                        <option key={c.id} value={c.id}>{c.razaoSocial}</option>
-                      ))}
+                      {clients.length === 0 ? (
+                        <option value="">Nenhum cliente cadastrado (cadastre primeiro)</option>
+                      ) : (
+                        clients.map(c => (
+                          <option key={c.id} value={c.id}>{c.razaoSocial}</option>
+                        ))
+                      )}
                     </select>
                   </div>
 
@@ -540,7 +524,7 @@ export default function AdminDashboard({
                           className="btn btn-ruby btn-sm"
                         >
                           <Plus size={14} />
-                          <span>+ Lançar Primeira Obrigação</span>
+                          <span>+ Nova Obrigação</span>
                         </button>
                       </td>
                     </tr>
@@ -657,7 +641,7 @@ export default function AdminDashboard({
               <div>
                 <h3 style={{ fontSize: '1.2rem', color: '#FFFFFF' }}>Empresas Cadastradas</h3>
                 <div style={{ fontSize: '0.82rem', color: '#94A3B8' }}>
-                  Carteira oficial da Y7 Service (cadastre seus clientes reais abaixo)
+                  Carteira de clientes atendidos pela Y7 Service
                 </div>
               </div>
 
@@ -666,7 +650,7 @@ export default function AdminDashboard({
                 className="btn btn-ruby btn-sm"
               >
                 <Plus size={14} />
-                <span>Cadastrar Cliente Real</span>
+                <span>+ Novo Cliente</span>
               </button>
             </div>
 
@@ -675,72 +659,81 @@ export default function AdminDashboard({
               gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
               gap: '16px'
             }}>
-              {clients.map((cli) => {
-                const pendentesCli = obligations.filter(o => o.clienteId === cli.id && o.status !== 'Entregue').length;
+              {clients.length === 0 ? (
+                <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '36px', color: '#94A3B8' }}>
+                  <Building2 size={32} style={{ marginBottom: '10px', opacity: 0.4 }} />
+                  <div style={{ color: '#FFFFFF', fontWeight: 600, marginBottom: '6px' }}>Nenhum cliente cadastrado</div>
+                  <div style={{ fontSize: '0.84rem', marginBottom: '16px' }}>Cadastre as empresas atendidas pela contabilidade para vincular obrigações e emitir demonstrações.</div>
+                  <button onClick={() => { setEditingClient(null); setIsClientModalOpen(true); }} className="btn btn-ruby btn-sm">
+                    <Plus size={14} /> <span>+ Cadastrar Cliente</span>
+                  </button>
+                </div>
+              ) : (
+                clients.map((cli) => {
+                  const pendentesCli = obligations.filter(o => o.clienteId === cli.id && o.status !== 'Entregue').length;
 
-                return (
-                  <div
-                    key={cli.id}
-                    style={{
-                      backgroundColor: 'rgba(255, 255, 255, 0.02)',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
-                      borderRadius: '8px',
-                      padding: '18px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between'
-                    }}
-                  >
-                    <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-                        <span style={{
-                          fontSize: '0.72rem',
-                          fontWeight: 700,
-                          color: '#38BDF8',
-                          backgroundColor: 'rgba(56, 189, 248, 0.1)',
-                          padding: '3px 8px',
-                          borderRadius: '4px'
-                        }}>
-                          {cli.regime}
-                        </span>
+                  return (
+                    <div
+                      key={cli.id}
+                      style={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        borderRadius: '8px',
+                        padding: '18px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between'
+                      }}
+                    >
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                          <span style={{
+                            fontSize: '0.72rem',
+                            fontWeight: 700,
+                            color: '#38BDF8',
+                            backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                            padding: '3px 8px',
+                            borderRadius: '4px'
+                          }}>
+                            {cli.regime}
+                          </span>
 
-                        <span style={{ fontSize: '0.74rem', color: pendentesCli > 0 ? '#F59E0B' : '#10B981', fontWeight: 600 }}>
-                          {pendentesCli > 0 ? `⚠️ ${pendentesCli} pendente(s)` : '🟢 100% em dia'}
-                        </span>
+                          <span style={{ fontSize: '0.74rem', color: pendentesCli > 0 ? '#F59E0B' : '#10B981', fontWeight: 600 }}>
+                            {pendentesCli > 0 ? `⚠️ ${pendentesCli} pendente(s)` : '🟢 100% em dia'}
+                          </span>
+                        </div>
+
+                        <h4 style={{ fontSize: '1.05rem', color: '#FFFFFF', marginBottom: '4px' }}>
+                          {cli.razaoSocial}
+                        </h4>
+                        <div className="mono" style={{ fontSize: '0.78rem', color: '#94A3B8', marginBottom: '10px' }}>
+                          CNPJ: {cli.cnpj}
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.8rem', color: '#CBD5E1' }}>
+                          <div><strong>Responsável:</strong> {cli.responsavel}</div>
+                          <div><strong>E-mail:</strong> {cli.email}</div>
+                          <div><strong>Telefone:</strong> {cli.telefone}</div>
+                        </div>
                       </div>
 
-                      <h4 style={{ fontSize: '1.05rem', color: '#FFFFFF', marginBottom: '4px' }}>
-                        {cli.razaoSocial}
-                      </h4>
-                      <div className="mono" style={{ fontSize: '0.78rem', color: '#94A3B8', marginBottom: '10px' }}>
-                        CNPJ: {cli.cnpj}
-                      </div>
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'flex-end',
+                        gap: '8px',
+                        marginTop: '16px',
+                        paddingTop: '12px',
+                        borderTop: '1px solid rgba(255, 255, 255, 0.06)'
+                      }}>
+                        <button
+                          onClick={() => { setEditingClient(cli); setIsClientModalOpen(true); }}
+                          className="btn btn-secondary btn-sm"
+                          style={{ padding: '5px 8px' }}
+                          title="Editar"
+                        >
+                          <Edit3 size={12} />
+                        </button>
 
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.8rem', color: '#CBD5E1' }}>
-                        <div><strong>Responsável:</strong> {cli.responsavel}</div>
-                        <div><strong>E-mail:</strong> {cli.email}</div>
-                        <div><strong>Telefone:</strong> {cli.telefone}</div>
-                      </div>
-                    </div>
-
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'flex-end',
-                      gap: '8px',
-                      marginTop: '16px',
-                      paddingTop: '12px',
-                      borderTop: '1px solid rgba(255, 255, 255, 0.06)'
-                    }}>
-                      <button
-                        onClick={() => { setEditingClient(cli); setIsClientModalOpen(true); }}
-                        className="btn btn-secondary btn-sm"
-                        style={{ padding: '5px 8px' }}
-                        title="Editar"
-                      >
-                        <Edit3 size={12} />
-                      </button>
-
-                      {cli.id !== 'cli-y7' && (
                         <button
                           onClick={() => handleDeleteClient(cli.id)}
                           className="btn btn-secondary btn-sm"
@@ -749,11 +742,11 @@ export default function AdminDashboard({
                         >
                           <Trash2 size={12} />
                         </button>
-                      )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           </div>
         )}
@@ -762,7 +755,7 @@ export default function AdminDashboard({
             ABA 3: EMISSÃO E INJEÇÃO DE DRE & BALANÇO (IMPRESSÃO / PDF)
            ======================================================== */}
         {activeTab === 'demonstrativos' && (
-          <FinancialStatementsEditor clients={clients} />
+          <FinancialStatementsEditor clients={clients} onUpdateClient={handleSaveClient} />
         )}
 
         {/* ========================================================

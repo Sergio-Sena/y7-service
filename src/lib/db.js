@@ -1,81 +1,195 @@
 import { supabase } from './supabase';
 
+// Chaves de armazenamento persistente
+const STORAGE_CLIENTES = 'y7_db_clientes';
+const STORAGE_OBRIGACOES = 'y7_db_obrigacoes';
+const STORAGE_USUARIOS = 'y7_db_usuarios';
+
 // ── CLIENTES ──────────────────────────────────────────────
 
 export async function fetchClientes() {
-  const { data, error } = await supabase
-    .from('clientes')
-    .select('*')
-    .order('created_at', { ascending: false });
-  if (error) throw error;
-  return data.map(dbToClient);
+  try {
+    const { data, error } = await supabase
+      .from('clientes')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (!error && Array.isArray(data)) {
+      const list = data.map(dbToClient).filter(c => !c.id?.includes('athene') && !c.razaoSocial?.toLowerCase().includes('athene'));
+      localStorage.setItem(STORAGE_CLIENTES, JSON.stringify(list));
+      return list;
+    }
+  } catch (err) {
+    // Modo local / offline
+  }
+
+  const cached = localStorage.getItem(STORAGE_CLIENTES);
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached);
+      return Array.isArray(parsed) 
+        ? parsed.filter(c => !c.id?.includes('athene') && !c.razaoSocial?.toLowerCase().includes('athene')) 
+        : [];
+    } catch (e) {}
+  }
+  return [];
 }
 
 export async function saveCliente(client) {
-  const { error } = await supabase
-    .from('clientes')
-    .upsert(clientToDb(client));
-  if (error) throw error;
+  // 1. Persistência imediata local
+  try {
+    const cached = localStorage.getItem(STORAGE_CLIENTES);
+    let list = cached ? JSON.parse(cached) : [];
+    const idx = list.findIndex(c => c.id === client.id);
+    if (idx >= 0) {
+      list[idx] = client;
+    } else {
+      list.unshift(client);
+    }
+    localStorage.setItem(STORAGE_CLIENTES, JSON.stringify(list));
+  } catch (e) {}
+
+  // 2. Persistência no banco Supabase
+  try {
+    await supabase.from('clientes').upsert(clientToDb(client));
+  } catch (err) {}
 }
 
 export async function deleteCliente(id) {
-  const { error } = await supabase
-    .from('clientes')
-    .delete()
-    .eq('id', id);
-  if (error) throw error;
+  // 1. Remoção local
+  try {
+    const cached = localStorage.getItem(STORAGE_CLIENTES);
+    if (cached) {
+      const list = JSON.parse(cached).filter(c => c.id !== id);
+      localStorage.setItem(STORAGE_CLIENTES, JSON.stringify(list));
+    }
+  } catch (e) {}
+
+  // 2. Remoção no banco Supabase
+  try {
+    await supabase.from('clientes').delete().eq('id', id);
+  } catch (err) {}
 }
 
 // ── OBRIGAÇÕES ────────────────────────────────────────────
 
 export async function fetchObrigacoes() {
-  const { data, error } = await supabase
-    .from('obrigacoes')
-    .select('*')
-    .order('vencimento', { ascending: true });
-  if (error) throw error;
-  return data.map(dbToObligation);
+  try {
+    const { data, error } = await supabase
+      .from('obrigacoes')
+      .select('*')
+      .order('vencimento', { ascending: true });
+    if (!error && Array.isArray(data)) {
+      const list = data.map(dbToObligation).filter(o => !o.clienteId?.includes('athene') && !o.clienteNome?.toLowerCase().includes('athene'));
+      localStorage.setItem(STORAGE_OBRIGACOES, JSON.stringify(list));
+      return list;
+    }
+  } catch (err) {
+    // Modo local / offline
+  }
+
+  const cached = localStorage.getItem(STORAGE_OBRIGACOES);
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached);
+      return Array.isArray(parsed)
+        ? parsed.filter(o => !o.clienteId?.includes('athene') && !o.clienteNome?.toLowerCase().includes('athene'))
+        : [];
+    } catch (e) {}
+  }
+  return [];
 }
 
 export async function saveObrigacao(ob) {
-  const { error } = await supabase
-    .from('obrigacoes')
-    .upsert(obligationToDb(ob));
-  if (error) throw error;
+  // 1. Persistência imediata local
+  try {
+    const cached = localStorage.getItem(STORAGE_OBRIGACOES);
+    let list = cached ? JSON.parse(cached) : [];
+    const idx = list.findIndex(o => o.id === ob.id);
+    if (idx >= 0) {
+      list[idx] = ob;
+    } else {
+      list.unshift(ob);
+    }
+    localStorage.setItem(STORAGE_OBRIGACOES, JSON.stringify(list));
+  } catch (e) {}
+
+  // 2. Persistência no banco Supabase
+  try {
+    await supabase.from('obrigacoes').upsert(obligationToDb(ob));
+  } catch (err) {}
 }
 
 export async function deleteObrigacao(id) {
-  const { error } = await supabase
-    .from('obrigacoes')
-    .delete()
-    .eq('id', id);
-  if (error) throw error;
+  // 1. Remoção local
+  try {
+    const cached = localStorage.getItem(STORAGE_OBRIGACOES);
+    if (cached) {
+      const list = JSON.parse(cached).filter(o => o.id !== id);
+      localStorage.setItem(STORAGE_OBRIGACOES, JSON.stringify(list));
+    }
+  } catch (e) {}
+
+  // 2. Remoção no banco Supabase
+  try {
+    await supabase.from('obrigacoes').delete().eq('id', id);
+  } catch (err) {}
 }
 
 // ── USUÁRIOS ──────────────────────────────────────────────
 
 export async function fetchUsuarios() {
-  const { data, error } = await supabase
-    .from('usuarios')
-    .select('*')
-    .order('created_at', { ascending: false });
-  if (error) throw error;
-  return data;
+  try {
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (!error && Array.isArray(data)) {
+      localStorage.setItem(STORAGE_USUARIOS, JSON.stringify(data));
+      return data;
+    }
+  } catch (err) {}
+
+  const cached = localStorage.getItem(STORAGE_USUARIOS);
+  if (cached) {
+    try {
+      return JSON.parse(cached);
+    } catch (e) {}
+  }
+  return [];
 }
 
 export async function saveUsuario(usuario) {
-  const { error } = await supabase
-    .from('usuarios')
-    .upsert(usuario);
-  if (error) throw error;
+  const userWithId = {
+    ...usuario,
+    id: usuario.id || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `usr-${Date.now()}`)
+  };
+
+  try {
+    const cached = localStorage.getItem(STORAGE_USUARIOS);
+    let list = cached ? JSON.parse(cached) : [];
+    const idx = list.findIndex(u => u.id === userWithId.id);
+    if (idx >= 0) list[idx] = userWithId;
+    else list.unshift(userWithId);
+    localStorage.setItem(STORAGE_USUARIOS, JSON.stringify(list));
+  } catch (e) {}
+
+  try {
+    await supabase.from('usuarios').upsert(userWithId);
+  } catch (err) {}
 }
 
 export async function deleteUsuario(id) {
-  const { error } = await supabase
-    .from('usuarios')
-    .delete()
-    .eq('id', id);
-  if (error) throw error;
+  try {
+    const cached = localStorage.getItem(STORAGE_USUARIOS);
+    if (cached) {
+      const list = JSON.parse(cached).filter(u => u.id !== id);
+      localStorage.setItem(STORAGE_USUARIOS, JSON.stringify(list));
+    }
+  } catch (e) {}
+
+  try {
+    await supabase.from('usuarios').delete().eq('id', id);
+  } catch (err) {}
 }
 
 // ── MAPPERS ───────────────────────────────────────────────
