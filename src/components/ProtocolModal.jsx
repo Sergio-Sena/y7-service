@@ -120,11 +120,11 @@ export default function ProtocolModal({ isOpen, onClose, onConfirm, obligation }
             />
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '20px' }}>
-            <button type="button" onClick={onClose} className="btn btn-secondary btn-sm">
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '20px', flexWrap: 'wrap' }}>
+            <button type="button" onClick={onClose} className="btn btn-secondary btn-sm" style={{ flex: '1 1 auto', minWidth: '100px' }}>
               Cancelar
             </button>
-            <button type="submit" className="btn btn-ruby btn-sm">
+            <button type="submit" className="btn btn-ruby btn-sm" style={{ flex: '1 1 auto' }}>
               <CheckCircle size={16} />
               <span>Salvar Baixa da Obrigação</span>
             </button>

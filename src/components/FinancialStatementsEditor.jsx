@@ -169,9 +169,10 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
   // 1. CÁLCULO DINÂMICO DE FATURAMENTO MENSAL E ACUMULADO
   const tabelaFaturamento = useMemo(() => {
     let acumulado = 0;
+    const baseFat = Number(faturamentoInput) || 0;
     return MODELO_ESTRUTURA.pesosMensais.map((item, index) => {
-      const part = item.peso / somaPesos;
-      const valor = faturamentoInput * part;
+      const part = somaPesos > 0 ? (item.peso / somaPesos) : 0;
+      const valor = baseFat * part;
       acumulado += valor;
       return {
         mes: item.mes,
@@ -437,15 +438,22 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
   };
 
   const handlePrint = () => {
-    window.print();
+    setActiveTab('relatorio');
+    setTimeout(() => {
+      window.print();
+    }, 150);
   };
 
   const formatBRL = (val) => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
+    const num = Number(val);
+    if (!isFinite(num) || isNaN(num)) return 'R$ 0,00';
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(num || 0);
   };
 
   const formatPct = (val) => {
-    return (val * 100).toFixed(2) + '%';
+    const num = Number(val);
+    if (!isFinite(num) || isNaN(num) || num === 0) return '0,00%';
+    return (num * 100).toFixed(2).replace('.', ',') + '%';
   };
 
   return (
@@ -453,7 +461,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
       {/* ========================================================
           BARRA DE FERRAMENTAS E SELEÇÃO DE CLIENTE / DEMONSTRATIVO
          ======================================================== */}
-      <div className="no-print glass-panel" style={{
+      <div className="no-print glass-panel editor-toolbar" style={{
         padding: '16px 20px',
         marginBottom: '24px',
         display: 'flex',
@@ -464,14 +472,14 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
         border: '1px solid rgba(56, 189, 248, 0.25)',
         background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%)'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-          <div>
+        <div className="editor-toolbar-controls" style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', flex: 1 }}>
+          <div style={{ flex: '1 1 260px', minWidth: 0 }}>
             <label style={{ fontSize: '0.75rem', color: '#94A3B8', textTransform: 'uppercase', fontWeight: 700, display: 'block', marginBottom: '4px' }}>
               Empresa / Cliente Selecionado
             </label>
             <select
               className="form-control"
-              style={{ width: 'auto', minWidth: '320px', padding: '8px 12px', fontSize: '0.88rem', fontWeight: 600, color: '#38BDF8' }}
+              style={{ width: '100%', maxWidth: '100%', padding: '8px 12px', fontSize: '0.88rem', fontWeight: 600, color: '#38BDF8' }}
               value={selectedClientId}
               onChange={(e) => setSelectedClientId(e.target.value)}
             >
@@ -485,7 +493,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
             </select>
           </div>
 
-          <div>
+          <div style={{ flex: '1 1 180px', minWidth: 0 }}>
             <label style={{ fontSize: '0.75rem', color: '#94A3B8', textTransform: 'uppercase', fontWeight: 700, display: 'block', marginBottom: '4px' }}>
               Faturamento Anual Desejado (R$)
             </label>
@@ -493,17 +501,25 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
               <input
                 type="number"
                 className="form-control mono"
-                style={{ width: '180px', padding: '8px 12px', fontSize: '0.9rem', fontWeight: 700, color: '#00F5D4' }}
-                value={faturamentoInput}
-                onChange={(e) => setFaturamentoInput(Number(e.target.value))}
+                style={{ flex: 1, minWidth: 0, padding: '8px 12px', fontSize: '0.9rem', fontWeight: 700, color: '#00F5D4' }}
+                value={faturamentoInput === 0 || faturamentoInput === '' ? '' : faturamentoInput}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/^0+(?=\d)/, '');
+                  setFaturamentoInput(raw === '' ? '' : Number(raw));
+                }}
+                onFocus={(e) => {
+                  if (e.target.value === '0') {
+                    setFaturamentoInput('');
+                  }
+                }}
                 placeholder="0,00"
               />
               <button
                 type="button"
-                onClick={() => setFaturamentoInput(0)}
+                onClick={() => setFaturamentoInput('')}
                 className="btn btn-secondary btn-sm"
                 title="Zerar Faturamento"
-                style={{ padding: '8px' }}
+                style={{ padding: '8px', flexShrink: 0 }}
               >
                 <RotateCcw size={14} />
               </button>
@@ -512,7 +528,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
         </div>
 
         {/* Botões de Ação Rápida */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+        <div className="editor-toolbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
           {saveSuccessMessage && (
             <span style={{ color: '#10B981', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
               <CheckCircle2 size={16} /> Salvo com Sucesso!
@@ -530,12 +546,12 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
             <span>Baixar Planilha (.xlsx)</span>
           </a>
 
-          <button onClick={handleSave} className="btn btn-ruby btn-sm">
-            <Save size={15} />
+          <button onClick={handleSave} className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <Save size={15} color="#38BDF8" />
             <span>Salvar Alterações</span>
           </button>
 
-          <button onClick={handlePrint} className="btn btn-ruby btn-sm">
+          <button onClick={handlePrint} className="btn btn-ruby btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
             <Printer size={15} />
             <span>Imprimir / Gerar PDF</span>
           </button>
@@ -545,10 +561,11 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
       {/* ========================================================
           NAVEGADOR DE ABAS DO PAINEL (IDÊNTICO ÀS ABAS DO EXCEL)
          ======================================================== */}
-      <div className="no-print" style={{
+      <div className="no-print editor-nav-tabs" style={{
         display: 'flex',
         gap: '6px',
         overflowX: 'auto',
+        WebkitOverflowScrolling: 'touch',
         borderBottom: '2px solid rgba(255, 255, 255, 0.1)',
         marginBottom: '24px',
         paddingBottom: '2px'
@@ -722,7 +739,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
                   <td className="mono" style={{ padding: '9px 14px' }}>4.1.1</td>
                   <td style={{ padding: '9px 14px' }}>RECEITA LÍQUIDA DE VENDAS</td>
                   <td className="mono" style={{ padding: '9px 14px', textAlign: 'right', color: '#FFFFFF' }}>{formatBRL(dreCalculada.receitaLiquida)}</td>
-                  <td className="mono" style={{ padding: '9px 14px', textAlign: 'right' }}>{formatPct(dreCalculada.receitaLiquida / dreCalculada.receitaBruta)}</td>
+                  <td className="mono" style={{ padding: '9px 14px', textAlign: 'right' }}>{formatPct(dreCalculada.receitaBruta > 0 ? (dreCalculada.receitaLiquida / dreCalculada.receitaBruta) : 0)}</td>
                   <td className="mono" style={{ padding: '9px 14px', textAlign: 'right', color: '#94A3B8' }}>{formatBRL(dreAnoAnterior.receitaLiquida)}</td>
                 </tr>
 
@@ -740,7 +757,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
                   <td className="mono" style={{ padding: '9px 14px' }}>5</td>
                   <td style={{ padding: '9px 14px' }}>LUCRO BRUTO</td>
                   <td className="mono" style={{ padding: '9px 14px', textAlign: 'right', color: '#38BDF8' }}>{formatBRL(dreCalculada.lucroBruto)}</td>
-                  <td className="mono" style={{ padding: '9px 14px', textAlign: 'right' }}>{formatPct(dreCalculada.lucroBruto / dreCalculada.receitaBruta)}</td>
+                  <td className="mono" style={{ padding: '9px 14px', textAlign: 'right' }}>{formatPct(dreCalculada.receitaBruta > 0 ? (dreCalculada.lucroBruto / dreCalculada.receitaBruta) : 0)}</td>
                   <td className="mono" style={{ padding: '9px 14px', textAlign: 'right', color: '#94A3B8' }}>{formatBRL(dreAnoAnterior.lucroBruto)}</td>
                 </tr>
 
@@ -782,7 +799,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
                   <td className="mono" style={{ padding: '9px 14px' }}>5.1</td>
                   <td style={{ padding: '9px 14px' }}>LUCRO OPERACIONAL</td>
                   <td className="mono" style={{ padding: '9px 14px', textAlign: 'right', color: '#FFFFFF' }}>{formatBRL(dreCalculada.lucroOperacional)}</td>
-                  <td className="mono" style={{ padding: '9px 14px', textAlign: 'right' }}>{formatPct(dreCalculada.lucroOperacional / dreCalculada.receitaBruta)}</td>
+                  <td className="mono" style={{ padding: '9px 14px', textAlign: 'right' }}>{formatPct(dreCalculada.receitaBruta > 0 ? (dreCalculada.lucroOperacional / dreCalculada.receitaBruta) : 0)}</td>
                   <td className="mono" style={{ padding: '9px 14px', textAlign: 'right', color: '#94A3B8' }}>{formatBRL(dreAnoAnterior.lucroOperacional)}</td>
                 </tr>
 
@@ -800,7 +817,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
                   <td className="mono" style={{ padding: '9px 14px' }}>5.1.1</td>
                   <td style={{ padding: '9px 14px' }}>RESULTADO ANTES DO IMPOSTO DE RENDA (LAIR)</td>
                   <td className="mono" style={{ padding: '9px 14px', textAlign: 'right', color: '#FFFFFF' }}>{formatBRL(dreCalculada.lair)}</td>
-                  <td className="mono" style={{ padding: '9px 14px', textAlign: 'right' }}>{formatPct(dreCalculada.lair / dreCalculada.receitaBruta)}</td>
+                  <td className="mono" style={{ padding: '9px 14px', textAlign: 'right' }}>{formatPct(dreCalculada.receitaBruta > 0 ? (dreCalculada.lair / dreCalculada.receitaBruta) : 0)}</td>
                   <td className="mono" style={{ padding: '9px 14px', textAlign: 'right', color: '#94A3B8' }}>{formatBRL(dreAnoAnterior.lair)}</td>
                 </tr>
 
@@ -818,8 +835,8 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
                   <td className="mono" style={{ padding: '8px 14px' }}>5.1.1.002</td>
                   <td style={{ padding: '8px 14px' }}>RESULTADO ANTES DAS PARTICIPAÇÕES</td>
                   <td className="mono" style={{ padding: '8px 14px', textAlign: 'right', color: '#FFFFFF' }}>{formatBRL(dreCalculada.resultadoAntesPart)}</td>
-                  <td className="mono" style={{ padding: '8px 14px', textAlign: 'right' }}>{formatPct(dreCalculada.resultadoAntesPart / dreCalculada.receitaBruta)}</td>
-                  <td className="mono" style={{ padding: '8px 14px', textAlign: 'right', color: '#94A3B8' }}>{formatBRL(dreAnoAnterior.resultadoAntesPart)}</td>
+                  <td className="mono" style={{ padding: '9px 14px', textAlign: 'right' }}>{formatPct(dreCalculada.receitaBruta > 0 ? (dreCalculada.resultadoAntesPart / dreCalculada.receitaBruta) : 0)}</td>
+                  <td className="mono" style={{ padding: '9px 14px', textAlign: 'right', color: '#94A3B8' }}>{formatBRL(dreAnoAnterior.resultadoAntesPart)}</td>
                 </tr>
 
                 {/* PARTICIPAÇÕES */}
@@ -840,7 +857,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
                   <td className="mono" style={{ padding: '12px 14px', fontSize: '1rem', color: '#FFFFFF' }}>5.1.1.003</td>
                   <td style={{ padding: '12px 14px', fontSize: '1rem', color: '#FFFFFF' }}>LUCRO LÍQUIDO DO EXERCÍCIO</td>
                   <td className="mono" style={{ padding: '12px 14px', textAlign: 'right', fontSize: '1.15rem', color: '#34D399' }}>{formatBRL(dreCalculada.lucroLiquido)}</td>
-                  <td className="mono" style={{ padding: '12px 14px', textAlign: 'right', color: '#34D399' }}>{formatPct(dreCalculada.lucroLiquido / dreCalculada.receitaBruta)}</td>
+                  <td className="mono" style={{ padding: '12px 14px', textAlign: 'right', color: '#34D399' }}>{formatPct(dreCalculada.receitaBruta > 0 ? (dreCalculada.lucroLiquido / dreCalculada.receitaBruta) : 0)}</td>
                   <td className="mono" style={{ padding: '12px 14px', textAlign: 'right', fontSize: '1rem', color: '#E2E8F0' }}>{formatBRL(dreAnoAnterior.lucroLiquido)}</td>
                 </tr>
               </tbody>
@@ -1181,8 +1198,17 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
               <input
                 type="number"
                 className="form-control mono"
-                value={empresaData.capitalSocial}
-                onChange={(e) => setEmpresaData({ ...empresaData, capitalSocial: Number(e.target.value) })}
+                value={empresaData.capitalSocial === 0 || empresaData.capitalSocial === '' ? '' : empresaData.capitalSocial}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/^0+(?=\d)/, '');
+                  setEmpresaData({ ...empresaData, capitalSocial: raw === '' ? '' : Number(raw) });
+                }}
+                onFocus={(e) => {
+                  if (e.target.value === '0') {
+                    setEmpresaData({ ...empresaData, capitalSocial: '' });
+                  }
+                }}
+                placeholder="0,00"
               />
             </div>
 
@@ -1259,7 +1285,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
           Visível na aba "relatorio" e sempre ativo para @media print
          ======================================================== */}
       {(activeTab === 'relatorio' || true) && (
-        <div className={`printable-report ${activeTab !== 'relatorio' ? 'no-print' : ''}`} style={{
+        <div className={`printable-report ${activeTab !== 'relatorio' ? 'report-tab-hidden' : ''}`} style={{
           backgroundColor: '#0a0f1d',
           borderRadius: '10px',
           border: '1px solid rgba(255, 255, 255, 0.12)',
@@ -1272,11 +1298,13 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '12px',
             marginBottom: '24px',
             paddingBottom: '14px',
             borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
           }}>
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div className="report-view-buttons" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <button
                 type="button"
                 onClick={() => setReportViewMode('unificado')}
@@ -1323,7 +1351,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
               </button>
             </div>
 
-            <button onClick={handlePrint} className="btn btn-ruby btn-sm">
+            <button onClick={handlePrint} className="btn btn-ruby btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
               <Printer size={15} />
               <span>Imprimir / Gerar PDF</span>
             </button>
@@ -1331,58 +1359,87 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
 
           {/* Cabeçalho do Papel Timbrado Oficial - Y7 Service */}
           <div className="report-header" style={{
+            position: 'relative',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
             textAlign: 'center',
-            borderBottom: '2.5px solid #C81E3D',
-            paddingBottom: '16px',
-            marginBottom: '20px',
-            gap: '8px'
+            borderBottom: '2px solid #C81E3D',
+            paddingBottom: '10px',
+            marginBottom: '14px',
+            gap: '3px'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '14px' }}>
-              <div style={{
-                width: '54px',
-                height: '54px',
-                borderRadius: '8px',
-                overflow: 'hidden',
-                border: '2px solid #C81E3D',
-                backgroundColor: '#0a0f1d',
-                flexShrink: 0
+            {/* Logo como Marca d'Água no Cabeçalho */}
+            <div className="report-watermark" style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '140px',
+              height: '140px',
+              opacity: 0.16,
+              pointerEvents: 'none',
+              zIndex: 0,
+              userSelect: 'none'
+            }}>
+              <img 
+                src="/assets/y7_watermark.png" 
+                alt="Y7 Service" 
+                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              />
+            </div>
+
+            <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', width: '100%' }}>
+              <div className="report-header-title" style={{
+                fontSize: '1.35rem',
+                fontWeight: 900,
+                color: '#FFFFFF',
+                letterSpacing: '0.04em',
+                lineHeight: 1.2,
+                textAlign: 'center'
               }}>
-                <img 
-                  src="/assets/y7_logo_emblema.jpg" 
-                  alt="Y7 Service" 
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
+                Y7 SERVICE LTDA
               </div>
-              <div style={{ textAlign: 'left' }}>
-                <div style={{ fontSize: '1.65rem', fontWeight: 900, color: '#FFFFFF', letterSpacing: '0.04em', lineHeight: 1.1 }}>
-                  Y7 SERVICE LTDA
-                </div>
-                <div style={{ fontSize: '0.82rem', color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  Assessoria Contábil, Auditoria & Gestão Tributária Estratégica
-                </div>
+              <div className="report-header-subtitle" style={{
+                fontSize: '0.74rem',
+                color: '#94A3B8',
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+                textAlign: 'center',
+                marginTop: '2px'
+              }}>
+                Assessoria Contábil, Auditoria & Gestão Tributária Estratégica
               </div>
             </div>
 
-            <div style={{ fontSize: '0.82rem', color: '#CBD5E1', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px', marginTop: '2px' }}>
-              <span><strong>CNPJ:</strong> {Y7_INFO.cnpj}</span>
-              <span>•</span>
-              <span><strong>Endereço:</strong> Av. Copacabana, 112 - Sala 1712, Alphaville - Barueri/SP</span>
-              <span>•</span>
-              <span><strong>E-mail:</strong> {Y7_INFO.contatos.email}</span>
+            <div className="report-header-contact" style={{
+              position: 'relative',
+              zIndex: 1,
+              fontSize: '0.74rem',
+              color: '#CBD5E1',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '2px',
+              marginTop: '4px',
+              textAlign: 'center'
+            }}>
+              <div><strong>CNPJ:</strong> {Y7_INFO.cnpj}</div>
+              <div><strong>Endereço:</strong> Av. Copacabana, 112 - Sala 1712, Alphaville - Barueri/SP</div>
+              <div><strong>E-mail:</strong> {Y7_INFO.contatos.email}</div>
             </div>
           </div>
 
           {/* Dados da Empresa Auditada */}
-          <div style={{ textAlign: 'center', marginBottom: '22px', paddingBottom: '12px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
-            <h2 style={{ fontSize: '1.3rem', color: '#FFFFFF', textTransform: 'uppercase', letterSpacing: '0.04em', margin: 0 }}>
+          <div style={{ textAlign: 'center', marginBottom: '14px', paddingBottom: '8px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+            <h2 style={{ fontSize: '1.15rem', color: '#FFFFFF', textTransform: 'uppercase', letterSpacing: '0.03em', margin: 0 }}>
               {empresaData.razaoSocial}
             </h2>
-            <div style={{ fontSize: '0.9rem', color: '#38BDF8', fontWeight: 600, marginTop: '4px' }}>
-              CNPJ: {empresaData.cnpj} • Exercício Encerrado em 31/12/{empresaData.anoExercicio}
+            <div style={{ fontSize: '0.82rem', color: '#38BDF8', fontWeight: 600, marginTop: '2px' }}>
+              CNPJ: {empresaData.cnpj} &nbsp;|&nbsp; Exercício Encerrado em 31/12/{empresaData.anoExercicio}
             </div>
           </div>
 

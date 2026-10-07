@@ -154,7 +154,7 @@ export default function ObligationAlertPopup({ isOpen, onClose, obligations = []
             <button
               onClick={handleExportAll}
               className="btn btn-outline-blue btn-sm"
-              style={{ fontSize: '0.85rem' }}
+              style={{ flex: '1 1 auto', fontSize: '0.85rem', justifyContent: 'center' }}
             >
               <CalendarPlus size={15} />
               <span>Sincronizar Todas (.ics)</span>
@@ -164,7 +164,7 @@ export default function ObligationAlertPopup({ isOpen, onClose, obligations = []
           <button
             onClick={onClose}
             className="btn btn-ruby btn-sm"
-            style={{ marginLeft: 'auto', fontSize: '0.88rem' }}
+            style={{ flex: '1 1 auto', fontSize: '0.88rem', justifyContent: 'center' }}
           >
             <span>Entendido, vou providenciar</span>
             <ArrowRight size={15} />

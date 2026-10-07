@@ -273,129 +273,247 @@ select.form-control option {
   color: #FFFFFF;
 }
 
+/* Ocultar visualização da folha executiva em tela quando outra aba estiver selecionada */
+@media screen {
+  .report-tab-hidden {
+    display: none !important;
+  }
+}
+
 /* =======================================================
-   ESTILOS DE IMPRESSÃO / SALVAR EM PDF (A4 TIMBRADO)
+   ESTILOS DE IMPRESSÃO / SALVAR EM PDF (A4 TIMBRADO OFICIAL)
    ======================================================= */
 @media print {
-  /* Ocultar rigorosamente todo o site e componentes fora do relatório */
+  @page {
+    size: A4 portrait;
+    margin: 8mm 10mm;
+  }
+
+  /* Forçar renderização de cores, fundos e bordas exatas no PDF */
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Reset total de tela para página A4 limpa e contínua */
   html, body {
     background: #FFFFFF !important;
     background-image: none !important;
     color: #111827 !important;
-    padding: 0 !important;
-    margin: 0 !important;
     width: 100% !important;
+    height: auto !important;
     min-height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
   }
 
-  body * {
+  #root, main, .container {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: transparent !important;
+    border: none !important;
+  }
+
+  /* Ocultar rigorosamente componentes que não fazem parte do documento oficial */
+  header, 
+  footer, 
+  nav, 
+  button, 
+  .btn, 
+  .no-print, 
+  input, 
+  select, 
+  textarea, 
+  form, 
+  .modal-overlay,
+  .admin-nav-tabs,
+  .filter-bar,
+  .kpi-grid,
+  .hide-on-print,
+  .glass-panel:not(.printable-report) {
+    display: none !important;
     visibility: hidden !important;
   }
 
-  /* Exibir ESTRITAMENTE o relatório timbrado oficial da Y7 */
+  /* Exibir o Relatório Timbrado Oficial Y7 em fluxo natural com paginação contínua */
   .printable-report,
-  .printable-report * {
+  .printable-report.report-tab-hidden {
+    display: block !important;
     visibility: visible !important;
-  }
-
-  .printable-report {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
+    position: static !important;
     width: 100% !important;
+    max-width: 100% !important;
     margin: 0 !important;
-    padding: 10mm 12mm !important;
+    padding: 0 !important;
     background: #FFFFFF !important;
     background-color: #FFFFFF !important;
     color: #111827 !important;
     border: none !important;
     box-shadow: none !important;
     border-radius: 0 !important;
+    overflow: visible !important;
   }
 
   .printable-report * {
-    color: #111827 !important;
-    border-color: #CBD5E1 !important;
-    background: transparent !important;
-    text-shadow: none !important;
-    box-shadow: none !important;
+    visibility: visible !important;
+    color: #111827;
   }
 
+  /* Cabeçalho Oficial do Relatório Timbrado */
   .printable-report .report-header {
-    border-bottom: 2.5px solid #C81E3D !important;
-    padding-bottom: 14px !important;
-    margin-bottom: 18px !important;
+    position: relative !important;
+    border-bottom: 2px solid #C81E3D !important;
+    padding-bottom: 8px !important;
+    margin-bottom: 12px !important;
+    text-align: center !important;
   }
 
-  .printable-report .highlight-row {
-    background-color: #F8FAFC !important;
-    font-weight: bold !important;
+  .printable-report .report-header .report-watermark {
+    display: block !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 140px !important;
+    height: 140px !important;
+    opacity: 0.18 !important;
+    z-index: 0 !important;
+    pointer-events: none !important;
   }
 
-  .printable-report .super-highlight {
-    background-color: #F1F5F9 !important;
-    border: 1px solid #94A3B8 !important;
-    font-weight: bold !important;
+  .printable-report .report-header .report-header-title {
+    font-size: 1.25rem !important;
+    line-height: 1.15 !important;
+    text-align: center !important;
+    color: #111827 !important;
+    font-weight: 900 !important;
   }
 
-  /* Alinhamento Milimétrico das Assinaturas na Impressão */
-  .printable-report .signature-grid {
-    display: table !important;
+  .printable-report .report-header .report-header-subtitle {
+    font-size: 0.68rem !important;
+    color: #475569 !important;
+    text-align: center !important;
+    font-weight: 600 !important;
+  }
+
+  .printable-report .report-header .report-header-contact {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 2px !important;
+    font-size: 0.72rem !important;
+    margin-top: 3px !important;
+    text-align: center !important;
+    color: #334155 !important;
+  }
+
+  .printable-report .report-header * {
+    color: #111827 !important;
+  }
+
+  .printable-report .report-header strong {
+    color: #C81E3D !important;
+  }
+
+  .printable-report h2,
+  .printable-report h3,
+  .printable-report h4 {
+    color: #111827 !important;
+  }
+
+  /* Tabelas do Relatório com bordas finas e fundo para leitura contábil */
+  .printable-report table {
     width: 100% !important;
-    max-width: 100% !important;
-    margin-top: 36px !important;
-    table-layout: fixed !important;
+    border-collapse: collapse !important;
+  }
+
+  .printable-report thead {
+    display: table-header-group !important;
+  }
+
+  .printable-report th {
+    background-color: #F1F5F9 !important;
+    color: #0F172A !important;
+    border-bottom: 2px solid #CBD5E1 !important;
+    padding: 7px 10px !important;
+    font-size: 0.84rem !important;
+  }
+
+  .printable-report td {
+    border-bottom: 1px solid #E2E8F0 !important;
+    color: #1E293B !important;
+    padding: 6px 10px !important;
+    font-size: 0.84rem !important;
+  }
+
+  .printable-report tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .printable-report .highlight-row,
+  .printable-report tr.highlight-row td {
+    background-color: #F8FAFC !important;
+    font-weight: 700 !important;
+    color: #0F172A !important;
+  }
+
+  .printable-report .super-highlight,
+  .printable-report tr.super-highlight td {
+    background-color: #EEF2F6 !important;
+    border: 1px solid #94A3B8 !important;
+    font-weight: 800 !important;
+    color: #0F172A !important;
+  }
+
+  .printable-report .report-section {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    margin-bottom: 22px !important;
+  }
+
+  /* Assinaturas Contábeis sem quebra de página indevida */
+  .printable-report .signature-grid {
+    display: flex !important;
+    justifyContent: space-around !important;
+    width: 100% !important;
+    margin-top: 32px !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   .printable-report .signature-col {
-    display: table-cell !important;
-    width: 50% !important;
-    vertical-align: top !important;
+    flex: 1 !important;
     text-align: center !important;
-    padding: 0 20px !important;
+    padding: 0 16px !important;
   }
 
   .printable-report .signature-line {
     border-bottom: 1.5px solid #111827 !important;
     width: 220px !important;
     height: 0 !important;
-    margin: 0 auto 10px auto !important;
+    margin: 0 auto 8px auto !important;
     display: block !important;
-  }
-
-  /* Ocultar completamente qualquer botão, link, menu, cabeçalho e formulário */
-  button, 
-  .btn, 
-  .no-print, 
-  header, 
-  footer, 
-  nav, 
-  input, 
-  select, 
-  textarea, 
-  form, 
-  .modal-overlay,
-  .glass-panel:not(.printable-report) {
-    display: none !important;
-    visibility: hidden !important;
-  }
-
-  @page {
-    size: A4 portrait;
-    margin: 8mm 10mm;
   }
 }
 
 /* =======================================================
-   RESPONSIVIDADE MOBILE COMPLETA
+   RESPONSIVIDADE MOBILE COMPLETA (CELULAR & TABLET)
    ======================================================= */
 @media (max-width: 768px) {
   body {
-    font-size: 0.95rem;
+    font-size: 0.94rem;
   }
 
   .container {
-    padding: 0 16px;
+    padding: 0 14px;
   }
 
   .hide-mobile {
@@ -407,23 +525,26 @@ select.form-control option {
   }
 
   section {
-    padding: 50px 0 !important;
+    padding: 42px 0 !important;
   }
 
   h1 {
-    font-size: 2rem !important;
+    font-size: 1.85rem !important;
     line-height: 1.25 !important;
     text-align: center;
   }
 
   p {
-    font-size: 0.96rem !important;
+    font-size: 0.95rem !important;
     text-align: center;
   }
 
+  /* Hero Mobile */
   .hero-buttons {
     flex-direction: column !important;
     width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto;
   }
 
   .hero-buttons .btn {
@@ -433,36 +554,212 @@ select.form-control option {
 
   .hero-grid {
     grid-template-columns: 1fr !important;
-    gap: 30px !important;
+    gap: 26px !important;
     text-align: center;
   }
 
   .hero-logo-box {
-    max-width: 300px !important;
+    max-width: 270px !important;
     margin: 0 auto;
   }
 
   .glass-panel {
-    padding: 20px !important;
+    padding: 16px !important;
   }
 
+  /* Painel Administrativo Mobile */
+  .dashboard-header {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 16px !important;
+  }
+
+  .dashboard-header-title {
+    text-align: left;
+  }
+
+  .dashboard-header-title h1 {
+    text-align: left !important;
+    font-size: 1.55rem !important;
+  }
+
+  .dashboard-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .dashboard-actions .btn {
+    width: 100% !important;
+    justifyContent: center !important;
+  }
+
+  /* Grid de KPIs no Mobile: 2x2 prático e equilibrado */
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  .kpi-grid .glass-panel {
+    padding: 14px 12px !important;
+  }
+
+  .kpi-grid .mono {
+    font-size: 1.4rem !important;
+  }
+
+  /* Navegador de Abas com Rolagem Horizontal Suave */
+  .admin-nav-tabs,
+  .editor-nav-tabs {
+    display: flex !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    white-space: nowrap !important;
+    gap: 6px !important;
+    padding-bottom: 6px !important;
+    margin-bottom: 18px !important;
+  }
+
+  .admin-nav-tabs::-webkit-scrollbar,
+  .editor-nav-tabs::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .admin-nav-tabs::-webkit-scrollbar-thumb,
+  .editor-nav-tabs::-webkit-scrollbar-thumb {
+    background: rgba(200, 30, 61, 0.4);
+    border-radius: 4px;
+  }
+
+  .admin-nav-tabs button,
+  .editor-nav-tabs button {
+    flex-shrink: 0 !important;
+    padding: 9px 14px !important;
+    font-size: 0.84rem !important;
+  }
+
+  /* Barra de Filtros e Busca no Mobile */
+  .filter-bar {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .filter-bar > div,
+  .filter-bar > select,
+  .filter-bar > button {
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+
+  .filter-bar-selects {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  /* Gráficos e Tabelas */
   .chart-bars-container {
     overflow-x: auto;
     padding-bottom: 10px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Barra de Ferramentas do Editor de Demonstrativos */
+  .editor-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 14px !important;
+  }
+
+  .editor-toolbar-controls {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+  }
+
+  .editor-toolbar-controls select,
+  .editor-toolbar-controls input {
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+
+  .editor-toolbar-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .editor-toolbar-actions .btn {
+    width: 100% !important;
+    justifyContent: center !important;
+  }
+
+  /* Relatório Timbrado - visualização em tela no mobile */
+  .printable-report {
+    padding: 16px !important;
+    border-radius: 8px !important;
+  }
+
+  .printable-report .report-header {
+    flex-direction: column !important;
+    gap: 12px !important;
+    text-align: center !important;
+  }
+
+  .printable-report .report-header > div {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+
+  .printable-report .report-header div[style*="textAlign: 'left'"] {
+    text-align: center !important;
+  }
+
+  .report-view-buttons {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+
+  .report-view-buttons .btn {
+    flex: 1 1 calc(50% - 6px) !important;
+    font-size: 0.78rem !important;
+    padding: 7px 8px !important;
+    text-align: center !important;
+    justify-content: center !important;
   }
 }
 
 @media (max-width: 480px) {
   h1 {
-    font-size: 1.75rem !important;
+    font-size: 1.65rem !important;
   }
 
   .btn {
-    padding: 12px 18px;
-    font-size: 0.92rem;
+    padding: 11px 16px;
+    font-size: 0.88rem;
   }
 
   .modal-content {
-    padding: 18px !important;
+    padding: 16px !important;
+    width: 95% !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+  }
+
+  /* Em telas muito estreitas, 1 coluna para KPIs se necessário ou grid compacto */
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .kpi-grid .mono {
+    font-size: 1.25rem !important;
   }
 }
