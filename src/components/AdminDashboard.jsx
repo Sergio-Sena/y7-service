@@ -70,17 +70,25 @@ export default function AdminDashboard({
 
   const handleSaveUsuario = async (e) => {
     e.preventDefault();
-    await saveUsuario(novoUsuario);
-    const lista = await fetchUsuarios();
-    setUsuarios(lista);
-    setNovoUsuario({ nome: '', email: '', perfil: 'contador' });
-    setShowUserForm(false);
+    try {
+      await saveUsuario(novoUsuario);
+      const lista = await fetchUsuarios();
+      setUsuarios(lista);
+      setNovoUsuario({ nome: '', email: '', perfil: 'contador' });
+      setShowUserForm(false);
+    } catch (err) {
+      alert('Erro ao salvar usuário. Tente novamente.');
+    }
   };
 
   const handleDeleteUsuario = async (id) => {
     if (window.confirm('Remover este usuário?')) {
-      await deleteUsuario(id);
-      setUsuarios(usuarios.filter(u => u.id !== id));
+      try {
+        await deleteUsuario(id);
+        setUsuarios(usuarios.filter(u => u.id !== id));
+      } catch (err) {
+        alert('Erro ao remover usuário. Tente novamente.');
+      }
     }
   };
 
@@ -115,26 +123,38 @@ export default function AdminDashboard({
   });
 
   const handleSaveClient = async (clientData) => {
-    await saveCliente(clientData);
-    if (editingClient) {
-      setClients(clients.map(c => c.id === clientData.id ? clientData : c));
-    } else {
-      setClients([clientData, ...clients]);
+    try {
+      await saveCliente(clientData);
+      if (editingClient) {
+        setClients(clients.map(c => c.id === clientData.id ? clientData : c));
+      } else {
+        setClients([clientData, ...clients]);
+      }
+      setEditingClient(null);
+    } catch (err) {
+      alert('Erro ao salvar cliente. Tente novamente.');
     }
-    setEditingClient(null);
   };
 
   const handleDeleteClient = async (id) => {
     if (window.confirm('Deseja realmente remover este cliente e suas obrigações?')) {
-      await deleteCliente(id);
-      setClients(clients.filter(c => c.id !== id));
-      setObligations(obligations.filter(o => o.clienteId !== id));
+      try {
+        await deleteCliente(id);
+        setClients(clients.filter(c => c.id !== id));
+        setObligations(obligations.filter(o => o.clienteId !== id));
+      } catch (err) {
+        alert('Erro ao remover cliente. Tente novamente.');
+      }
     }
   };
 
   const handleUpdateObligation = async (updated) => {
-    await saveObrigacao(updated);
-    setObligations(obligations.map(o => o.id === updated.id ? updated : o));
+    try {
+      await saveObrigacao(updated);
+      setObligations(obligations.map(o => o.id === updated.id ? updated : o));
+    } catch (err) {
+      alert('Erro ao atualizar obrigação. Tente novamente.');
+    }
   };
 
   const handleCreateObligation = async (e) => {
@@ -162,9 +182,13 @@ export default function AdminDashboard({
       observacao: newObData.observacao
     };
 
-    await saveObrigacao(nova);
-    setObligations([nova, ...obligations]);
-    setShowAddObligationForm(false);
+    try {
+      await saveObrigacao(nova);
+      setObligations([nova, ...obligations]);
+      setShowAddObligationForm(false);
+    } catch (err) {
+      alert('Erro ao salvar obrigação. Tente novamente.');
+    }
   };
 
   const handleExportAllToGoogleCalendar = () => {
