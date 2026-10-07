@@ -146,7 +146,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
             disabled={loading}
           >
             <CheckCircle2 size={18} />
-            <span>{loading ? 'Entrando...' : 'Entrar no Painel do Contador'}</span>
+            <span>{loading ? 'Entrando...' : 'Entrar'}</span>
           </button>
 
           <div style={{ marginTop: '16px', textAlign: 'center', fontSize: '0.78rem', color: '#64748B' }}>

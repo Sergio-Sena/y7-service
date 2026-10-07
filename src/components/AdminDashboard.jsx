@@ -276,7 +276,7 @@ export default function AdminDashboard({
               {totalClientes}
             </div>
             <div style={{ fontSize: '0.74rem', color: '#94A3B8' }}>
-              Carteira real gerenciada
+              Empresas ativas gerenciadas
             </div>
           </div>
 
@@ -335,7 +335,7 @@ export default function AdminDashboard({
         }}>
           {[
             { id: 'obrigacoes', label: 'Obrigações Fiscais (Google Calendar)', icon: <FileText size={15} /> },
-            { id: 'clientes', label: 'Cadastro de Clientes Reais', icon: <Building2 size={15} /> },
+            { id: 'clientes', label: 'Cadastro de Clientes', icon: <Building2 size={15} /> },
             { id: 'demonstrativos', label: 'Emissão DRE & Balanço', icon: <BarChart3 size={15} /> },
             { id: 'usuarios', label: 'Usuários do Sistema', icon: <UserCog size={15} /> }
           ].map(tab => (
@@ -524,7 +524,7 @@ export default function AdminDashboard({
                           className="btn btn-ruby btn-sm"
                         >
                           <Plus size={14} />
-                          <span>+ Lançar Primeira Obrigação</span>
+                          <span>+ Nova Obrigação</span>
                         </button>
                       </td>
                     </tr>
@@ -641,7 +641,7 @@ export default function AdminDashboard({
               <div>
                 <h3 style={{ fontSize: '1.2rem', color: '#FFFFFF' }}>Empresas Cadastradas</h3>
                 <div style={{ fontSize: '0.82rem', color: '#94A3B8' }}>
-                  Carteira oficial da Y7 Service (cadastre seus clientes reais abaixo)
+                  Carteira de clientes atendidos pela Y7 Service
                 </div>
               </div>
 
@@ -650,7 +650,7 @@ export default function AdminDashboard({
                 className="btn btn-ruby btn-sm"
               >
                 <Plus size={14} />
-                <span>+ Cadastrar Cliente Real</span>
+                <span>+ Novo Cliente</span>
               </button>
             </div>
 
@@ -665,7 +665,7 @@ export default function AdminDashboard({
                   <div style={{ color: '#FFFFFF', fontWeight: 600, marginBottom: '6px' }}>Nenhum cliente cadastrado</div>
                   <div style={{ fontSize: '0.84rem', marginBottom: '16px' }}>Cadastre as empresas atendidas pela contabilidade para vincular obrigações e emitir demonstrações.</div>
                   <button onClick={() => { setEditingClient(null); setIsClientModalOpen(true); }} className="btn btn-ruby btn-sm">
-                    <Plus size={14} /> <span>+ Cadastrar Primeiro Cliente</span>
+                    <Plus size={14} /> <span>+ Cadastrar Cliente</span>
                   </button>
                 </div>
               ) : (

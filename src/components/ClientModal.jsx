@@ -40,7 +40,7 @@ export default function ClientModal({ isOpen, onClose, onSave, editingClient }) 
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Building2 size={24} color="#C81E3D" />
             <h3 style={{ fontSize: '1.25rem', color: '#FFFFFF' }}>
-              {editingClient ? 'Editar Cadastro de Cliente' : 'Cadastrar Novo Cliente - Y7 Service'}
+              {editingClient ? 'Editar Cliente' : 'Novo Cliente'}
             </h3>
           </div>
           <button 
