@@ -1,6 +1,4 @@
 // Dados Institucionais e Estrutura de Compliance da Y7 Service Ltda
-// Sem nenhuma empresa fictícia ou dados inventados
-
 export const Y7_INFO = {
   razaoSocial: "Y7 SERVICE LTDA",
   nomeFantasia: "Y7 SERVICE / Y7 EMPRESARIAL",
@@ -24,24 +22,8 @@ export const Y7_INFO = {
   slogan: "Força Estratégica, Inteligência Tributária e Imponência Contábil"
 };
 
-// Carteira de Clientes: Limpa, apenas a própria matriz do escritório (nenhuma empresa inventada)
-export const INITIAL_CLIENTS = [
-  {
-    id: "cli-y7",
-    razaoSocial: "Y7 SERVICE LTDA",
-    nomeFantasia: "Y7 Service Matriz",
-    cnpj: "40.216.188/0001-24",
-    regime: "Lucro Presumido",
-    segmento: "Serviços Contábeis e Consultoria",
-    responsavel: "Nilson / Diretoria",
-    email: "contabil@y7service.com.br",
-    telefone: "(11) 98246-6092",
-    cidade: "Barueri - Alphaville/SP",
-    status: "Ativo",
-    dataEntrada: "2020-12-29",
-    honorarioMensal: 0
-  }
-];
+// Carteira de Clientes do Painel: Inicia 100% limpa para cadastro no banco de dados
+export const INITIAL_CLIENTS = [];
 
 // Catálogo Geral de Obrigações Acessórias da Receita Federal
 export const OBLIGATIONS_CATALOG = {
@@ -71,10 +53,10 @@ export const OBLIGATIONS_CATALOG = {
   ]
 };
 
-// Registro de Obrigações: Inicia 100% limpo para ser alimentado em tempo real pelos contadores
+// Registro de Obrigações do Painel: Inicia 100% limpo para ser gerido no banco
 export const INITIAL_OBLIGATIONS_RECORD = [];
 
-// Dados Tecnológicos do Dashboard Contábil Visual
+// Dados do Dashboard Contábil da Área Pública (Showcase / Vitrine Demonstrativa)
 export const DASHBOARD_METRICS = {
   kpis: [
     { label: "Receita Operacional Bruta", valor: 1850000, variacao: "+14.2% a.a.", tipo: "tech-cyan" },

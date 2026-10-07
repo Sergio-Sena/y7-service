@@ -2,11 +2,11 @@ import React from 'react';
 import { X, AlertTriangle, Calendar, CalendarPlus, CheckCircle, ArrowRight } from 'lucide-react';
 import { generateGoogleCalendarUrl, exportToIcsCalendar } from '../utils/googleCalendar';
 
-export default function ObligationAlertPopup({ isOpen, onClose, obligations }) {
+export default function ObligationAlertPopup({ isOpen, onClose, obligations = [] }) {
   if (!isOpen) return null;
 
   // Filtrar obrigações que não foram entregues ainda
-  const pendencias = obligations.filter(o => o.status !== 'Entregue');
+  const pendencias = (obligations || []).filter(o => o.status !== 'Entregue');
 
   const handleExportAll = () => {
     exportToIcsCalendar(pendencias, 'Y7_Alertas_Obrigacoes_Google.ics');
