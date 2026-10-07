@@ -183,17 +183,25 @@ export default function ClientModal({ isOpen, onClose, onSave, editingClient }) 
                 type="number" 
                 className="form-control mono" 
                 placeholder="2500"
-                value={formData.honorarioMensal}
-                onChange={(e) => setFormData({ ...formData, honorarioMensal: Number(e.target.value) })}
+                value={formData.honorarioMensal === 0 || formData.honorarioMensal === '' ? '' : formData.honorarioMensal}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/^0+(?=\d)/, '');
+                  setFormData({ ...formData, honorarioMensal: raw === '' ? '' : Number(raw) });
+                }}
+                onFocus={(e) => {
+                  if (e.target.value === '0') {
+                    setFormData({ ...formData, honorarioMensal: '' });
+                  }
+                }}
               />
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px', paddingTop: '16px', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
-            <button type="button" onClick={onClose} className="btn btn-secondary btn-sm">
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px', paddingTop: '16px', borderTop: '1px solid rgba(255, 255, 255, 0.1)', flexWrap: 'wrap' }}>
+            <button type="button" onClick={onClose} className="btn btn-secondary btn-sm" style={{ flex: '1 1 auto', minWidth: '100px' }}>
               Cancelar
             </button>
-            <button type="submit" className="btn btn-ruby btn-sm">
+            <button type="submit" className="btn btn-ruby btn-sm" style={{ flex: '1 1 auto' }}>
               <Save size={16} />
               <span>Salvar Cliente</span>
             </button>

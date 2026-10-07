@@ -42,11 +42,11 @@ export default function Hero() {
             </p>
 
             {/* Apenas 1 Botão para Coleta de Lead */}
-            <div className="hero-buttons" style={{ maxWidth: '340px' }}>
+            <div className="hero-buttons" style={{ width: '100%', maxWidth: '340px' }}>
               <button 
                 onClick={scrollToContact}
                 className="btn btn-ruby btn-block"
-                style={{ padding: '16px 26px', fontSize: '1.02rem' }}
+                style={{ width: '100%', padding: '16px 26px', fontSize: '1.02rem', justifyContent: 'center' }}
               >
                 <Send size={18} />
                 <span>Solicitar Proposta Contábil</span>

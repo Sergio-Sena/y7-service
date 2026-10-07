@@ -193,7 +193,7 @@ export default function AdminDashboard({
     <div style={{ padding: '36px 0 70px 0' }}>
       <div className="container">
         {/* Header do Painel */}
-        <div className="no-print" style={{
+        <div className="no-print dashboard-header" style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -203,7 +203,7 @@ export default function AdminDashboard({
           paddingBottom: '20px',
           borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
         }}>
-          <div>
+          <div className="dashboard-header-title">
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{
                 backgroundColor: 'rgba(200, 30, 61, 0.18)',
@@ -228,7 +228,7 @@ export default function AdminDashboard({
           </div>
 
           {/* Ações Globais */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+          <div className="dashboard-actions" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
             <button
               onClick={onOpenAlertPopup}
               className="btn btn-secondary btn-sm"
@@ -249,6 +249,16 @@ export default function AdminDashboard({
             </button>
 
             <button
+              onClick={() => setActiveTab('demonstrativos')}
+              className="btn btn-secondary btn-sm"
+              style={{ color: '#38BDF8', borderColor: 'rgba(56, 189, 248, 0.4)' }}
+              title="Emitir DRE e Balanço Patrimonial Oficial para PDF"
+            >
+              <Printer size={15} />
+              <span>Imprimir / PDF Contábil</span>
+            </button>
+
+            <button
               onClick={() => { setEditingClient(null); setIsClientModalOpen(true); }}
               className="btn btn-ruby btn-sm"
             >
@@ -259,7 +269,7 @@ export default function AdminDashboard({
         </div>
 
         {/* KPIs Cards */}
-        <div className="no-print" style={{
+        <div className="no-print kpi-grid" style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
           gap: '16px',
@@ -327,11 +337,14 @@ export default function AdminDashboard({
         </div>
 
         {/* Abas */}
-        <div className="no-print" style={{
+        <div className="no-print admin-nav-tabs" style={{
           display: 'flex',
           borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
           marginBottom: '24px',
-          gap: '8px'
+          gap: '8px',
+          overflowX: 'auto',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '2px'
         }}>
           {[
             { id: 'obrigacoes', label: 'Obrigações Fiscais (Google Calendar)', icon: <FileText size={15} /> },
@@ -353,7 +366,8 @@ export default function AdminDashboard({
                 color: activeTab === tab.id ? '#FFFFFF' : '#94A3B8',
                 fontWeight: activeTab === tab.id ? 700 : 500,
                 fontSize: '0.92rem',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                whiteSpace: 'nowrap'
               }}
             >
               {tab.icon}
@@ -367,7 +381,7 @@ export default function AdminDashboard({
            ======================================================== */}
         {activeTab === 'obrigacoes' && (
           <div className="glass-panel" style={{ padding: '24px' }}>
-            <div style={{
+            <div className="filter-bar" style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
@@ -375,7 +389,7 @@ export default function AdminDashboard({
               gap: '14px',
               marginBottom: '20px'
             }}>
-              <div style={{ position: 'relative', minWidth: '260px', flex: 1 }}>
+              <div style={{ position: 'relative', minWidth: '240px', flex: 1 }}>
                 <Search size={15} color="#94A3B8" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
                 <input
                   type="text"
@@ -387,29 +401,31 @@ export default function AdminDashboard({
                 />
               </div>
 
-              <select
-                className="form-control"
-                style={{ padding: '8px 12px', fontSize: '0.84rem', width: 'auto' }}
-                value={filtroRegime}
-                onChange={(e) => setFiltroRegime(e.target.value)}
-              >
-                <option value="Todos">Todos os Regimes</option>
-                <option value="Simples Nacional">Simples Nacional</option>
-                <option value="Lucro Presumido">Lucro Presumido</option>
-                <option value="Lucro Real">Lucro Real</option>
-              </select>
+              <div className="filter-bar-selects" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <select
+                  className="form-control"
+                  style={{ padding: '8px 12px', fontSize: '0.84rem', width: 'auto', minWidth: '140px' }}
+                  value={filtroRegime}
+                  onChange={(e) => setFiltroRegime(e.target.value)}
+                >
+                  <option value="Todos">Todos os Regimes</option>
+                  <option value="Simples Nacional">Simples Nacional</option>
+                  <option value="Lucro Presumido">Lucro Presumido</option>
+                  <option value="Lucro Real">Lucro Real</option>
+                </select>
 
-              <select
-                className="form-control"
-                style={{ padding: '8px 12px', fontSize: '0.84rem', width: 'auto' }}
-                value={filtroStatus}
-                onChange={(e) => setFiltroStatus(e.target.value)}
-              >
-                <option value="Todos">Todos os Status</option>
-                <option value="Entregue">🟢 Entregues</option>
-                <option value="Pendente">🟡 Pendentes</option>
-                <option value="Atrasado">🔴 Atrasados</option>
-              </select>
+                <select
+                  className="form-control"
+                  style={{ padding: '8px 12px', fontSize: '0.84rem', width: 'auto', minWidth: '130px' }}
+                  value={filtroStatus}
+                  onChange={(e) => setFiltroStatus(e.target.value)}
+                >
+                  <option value="Todos">Todos os Status</option>
+                  <option value="Entregue">🟢 Entregues</option>
+                  <option value="Pendente">🟡 Pendentes</option>
+                  <option value="Atrasado">🔴 Atrasados</option>
+                </select>
+              </div>
 
               <button
                 onClick={() => setShowAddObligationForm(!showAddObligationForm)}
@@ -495,7 +511,7 @@ export default function AdminDashboard({
             )}
 
             {/* Tabela de Obrigações */}
-            <div style={{ overflowX: 'auto' }}>
+            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.86rem' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.12)', color: '#94A3B8' }}>
@@ -656,7 +672,7 @@ export default function AdminDashboard({
 
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
               gap: '16px'
             }}>
               {clients.length === 0 ? (

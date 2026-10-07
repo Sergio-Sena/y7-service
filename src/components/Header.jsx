@@ -47,14 +47,14 @@ export default function Header({ currentView, setCurrentView, isAuthenticated, o
       </div>
 
       {/* Barra Principal de Navegação */}
-      <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px' }}>
+      <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px' }}>
         {/* Logo */}
         <div
           onClick={() => { setCurrentView('site'); setMenuOpen(false); }}
-          style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
+          style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', flexShrink: 0 }}
         >
           <div style={{
-            width: '44px', height: '44px', borderRadius: '8px', overflow: 'hidden',
+            width: '40px', height: '40px', borderRadius: '8px', overflow: 'hidden',
             border: '2px solid #C81E3D', backgroundColor: '#0a0f1d',
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
           }}>
@@ -70,14 +70,14 @@ export default function Header({ currentView, setCurrentView, isAuthenticated, o
           </div>
           <div>
             <div style={{
-              fontSize: '1.28rem', fontWeight: 800, color: '#FFFFFF',
-              display: 'flex', alignItems: 'center', gap: '5px',
+              fontSize: '1.2rem', fontWeight: 800, color: '#FFFFFF',
+              display: 'flex', alignItems: 'center', gap: '4px',
               letterSpacing: '0.02em', lineHeight: 1.1
             }}>
               <span>Y7</span>
               <span style={{ color: '#C81E3D' }}>SERVICE</span>
             </div>
-            <div style={{ fontSize: '0.72rem', color: '#94A3B8', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.04em' }}>
+            <div style={{ fontSize: '0.7rem', color: '#94A3B8', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.04em' }}>
               Contabilidade
             </div>
           </div>
