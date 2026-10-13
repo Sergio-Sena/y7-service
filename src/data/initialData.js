@@ -5,7 +5,6 @@ export const Y7_INFO = {
   cnpj: "40.216.188/0001-24",
   dataConstituicao: "29/12/2020",
   anoAbertura: "2020",
-  porte: "EPP",
   endereco: {
     logradouro: "Av. Copacabana, 112",
     complemento: "Sala 1712",

@@ -19,9 +19,60 @@ import {
   AlertTriangle,
   FileCheck,
   UserCheck,
-  Briefcase
+  Briefcase,
+  Award,
+  Edit3
 } from 'lucide-react';
 import { Y7_INFO } from '../data/initialData';
+
+export const formatarDataExtenso = (dataStr, anoPadrao = '2026') => {
+  if (!dataStr) return `02 de Janeiro de ${Number(anoPadrao) + 1}`;
+  if (/[a-zA-Z]/.test(dataStr)) return dataStr;
+  const partes = String(dataStr).trim().split(/[/.-]/);
+  if (partes.length === 3) {
+    let dia, mes, ano;
+    if (partes[0].length === 4) {
+      [ano, mes, dia] = partes;
+    } else {
+      [dia, mes, ano] = partes;
+    }
+    const meses = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+    const mIdx = parseInt(mes, 10) - 1;
+    if (mIdx >= 0 && mIdx < 12) {
+      const dNum = parseInt(dia, 10);
+      const diaFormatado = isNaN(dNum) ? dia : (dNum < 10 ? `0${dNum}` : `${dNum}`);
+      return `${diaFormatado} de ${meses[mIdx]} de ${ano}`;
+    }
+  }
+  return dataStr;
+};
+
+// Componente da Rubrica Manuscrita Autêntica de Nilson Oliveira dos Santos
+export function NilsonSignatureRubric() {
+  return (
+    <div style={{ height: '46px', marginBottom: '-10px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', pointerEvents: 'none' }}>
+      <svg
+        viewBox="0 0 160 85"
+        width="130"
+        height="64"
+        style={{ overflow: 'visible' }}
+      >
+        <path
+          d="M 24 62 C 18 52 14 38 22 24 C 30 10 44 4 52 4 C 57 4 64 8 66 18 C 69 32 64 48 58 60 C 53 70 48 78 42 90 M 38 34 C 46 22 62 16 75 22 C 86 27 92 38 86 50 C 80 60 68 64 60 60 C 54 57 52 50 56 42 C 62 34 74 36 82 44 M 48 48 C 46 58 42 72 38 92"
+          fill="none"
+          stroke="#FFFFFF"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="signature-rubric-path"
+        />
+      </svg>
+    </div>
+  );
+}
 
 // Estrutura de pesos de sazonalidade e coeficientes da planilha oficial Y7
 const MODELO_ESTRUTURA = {
@@ -41,77 +92,115 @@ const MODELO_ESTRUTURA = {
   ]
 };
 
+// Presets exatos dos PDFs para carregamento rápido
+const PRESETS_PDF = {
+  p2026: {
+    razaoSocial: 'MOURATO E ASSOCIADOS LTDA',
+    cnpj: '37.377.738/0001-45',
+    faturamento: 1409898.34,
+    capitalSocial: 1000000,
+    anoExercicio: '2026',
+    anoAnterior: '2025',
+    socioNome: 'JOSE JAILSON MOURATO DA SILVA',
+    socioCpf: '317.769.598-92'
+  },
+  p2025: {
+    razaoSocial: 'JOSE JAILSON MOURATO DA SILVA',
+    cnpj: '37.377.738/0001-45',
+    faturamento: 1385016.52,
+    capitalSocial: 100000,
+    anoExercicio: '2025',
+    anoAnterior: '2024',
+    socioNome: 'JOSE JAILSON MOURATO DA SILVA',
+    socioCpf: '317.769.598-92'
+  },
+  p2024: {
+    razaoSocial: 'JOSE JAILSON MOURATO DA SILVA',
+    cnpj: '37.377.738/0001-45',
+    faturamento: 1200447.02,
+    capitalSocial: 100000,
+    anoExercicio: '2024',
+    anoAnterior: '2023',
+    socioNome: 'JOSE JAILSON MOURATO DA SILVA',
+    socioCpf: '317.769.598-92'
+  }
+};
+
 export default function FinancialStatementsEditor({ clients = [], onUpdateClient }) {
   const [selectedClientId, setSelectedClientId] = useState(clients[0]?.id || '');
   const [activeTab, setActiveTab] = useState('dre');
   const [reportViewMode, setReportViewMode] = useState('unificado');
   const [saveSuccessMessage, setSaveSuccessMessage] = useState(false);
 
-  // Inicia 100% zerado e limpo (aguardando entrada do usuário/cliente)
+  // Valor de Faturamento Anual (inicia com modelo de referência ou salvo)
   const [faturamentoInput, setFaturamentoInput] = useState(() => {
     if (clients[0]?.id) {
       const saved = localStorage.getItem(`y7_fat_${clients[0].id}`);
       if (saved) return Number(saved);
     }
-    return 0;
+    return 1409898.34;
   });
 
-  // Informações cadastrais do cliente selecionado no banco de dados
+  // Modo de edição inline na Visualização Executiva (PDF / A4)
+  const [isReportEditing, setIsReportEditing] = useState(false);
+
+  // Informações cadastrais da empresa e responsáveis técnicos
   const [empresaData, setEmpresaData] = useState(() => {
     const cli = clients.find(c => c.id === selectedClientId) || clients[0];
     if (cli) {
       const saved = localStorage.getItem(`y7_empresa_${cli.id}`);
       if (saved) {
-        try { return JSON.parse(saved); } catch (e) {}
+        try {
+          const parsed = JSON.parse(saved);
+          if (!parsed.dataEmissao) {
+            parsed.dataEmissao = `02/01/${Number(parsed.anoExercicio || 2026) + 1}`;
+          }
+          return parsed;
+        } catch (e) {}
       }
       return {
-        razaoSocial: cli.razaoSocial || cli.nomeFantasia || '',
-        cnpj: cli.cnpj || '',
-        capitalSocial: 0,
+        razaoSocial: cli.razaoSocial || cli.nomeFantasia || 'MOURATO E ASSOCIADOS LTDA',
+        cnpj: cli.cnpj || '37.377.738/0001-45',
+        capitalSocial: 1000000,
         regime: cli.regime || 'Simples Nacional',
-        anoExercicio: String(new Date().getFullYear()),
-        anoAnterior: String(new Date().getFullYear() - 1),
+        anoExercicio: '2026',
+        anoAnterior: '2025',
+        dataEmissao: '02/01/2027',
         socio: {
-          nome: cli.responsavel || '',
+          nome: cli.responsavel || 'JOSE JAILSON MOURATO DA SILVA',
           qualificacao: 'Sócio Administrador',
-          cpf: ''
+          cpf: '317.769.598-92'
         },
         contador: {
-          nome: 'Nilson / Responsável Técnico',
-          crc: 'CRC/SP',
-          cpf: ''
+          nome: 'Nilson Oliveira dos Santos',
+          crc: 'CRC/SP 215.114',
+          cpf: '086.986.408-42'
         }
       };
     }
     return {
-      razaoSocial: '',
-      cnpj: '',
-      capitalSocial: 0,
+      razaoSocial: 'MOURATO E ASSOCIADOS LTDA',
+      cnpj: '37.377.738/0001-45',
+      capitalSocial: 1000000,
       regime: 'Simples Nacional',
-      anoExercicio: String(new Date().getFullYear()),
-      anoAnterior: String(new Date().getFullYear() - 1),
+      anoExercicio: '2026',
+      anoAnterior: '2025',
+      dataEmissao: '02/01/2027',
       socio: {
-        nome: '',
+        nome: 'JOSE JAILSON MOURATO DA SILVA',
         qualificacao: 'Sócio Administrador',
-        cpf: ''
+        cpf: '317.769.598-92'
       },
       contador: {
-        nome: 'Nilson / Responsável Técnico',
-        crc: 'CRC/SP',
-        cpf: ''
+        nome: 'Nilson Oliveira dos Santos',
+        crc: 'CRC/SP 215.114',
+        cpf: '086.986.408-42'
       }
     };
   });
 
-  // Atualização ao trocar de cliente ou ao carregar clientes do banco de dados
+  // Atualização ao trocar de cliente
   useEffect(() => {
-    // Limpeza de chaves legadas
-    try {
-      localStorage.removeItem('y7_empresa_cli-athene');
-      localStorage.removeItem('y7_fat_cli-athene');
-      localStorage.removeItem('y7_fin_cli-athene');
-    } catch (e) {}
-
     const cli = clients.find(c => c.id === selectedClientId) || clients[0];
     if (cli) {
       if (selectedClientId !== cli.id) {
@@ -120,57 +209,73 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
       const savedEmpresa = localStorage.getItem(`y7_empresa_${cli.id}`);
       if (savedEmpresa) {
         try {
-          setEmpresaData(JSON.parse(savedEmpresa));
+          const parsed = JSON.parse(savedEmpresa);
+          if (!parsed.dataEmissao) {
+            parsed.dataEmissao = `02/01/${Number(parsed.anoExercicio || 2026) + 1}`;
+          }
+          setEmpresaData(parsed);
         } catch (e) {}
       } else {
         setEmpresaData({
-          razaoSocial: cli.razaoSocial || cli.nomeFantasia || '',
-          cnpj: cli.cnpj || '',
-          capitalSocial: 0,
+          razaoSocial: cli.razaoSocial || cli.nomeFantasia || 'MOURATO E ASSOCIADOS LTDA',
+          cnpj: cli.cnpj || '37.377.738/0001-45',
+          capitalSocial: 1000000,
           regime: cli.regime || 'Simples Nacional',
-          anoExercicio: String(new Date().getFullYear()),
-          anoAnterior: String(new Date().getFullYear() - 1),
+          anoExercicio: '2026',
+          anoAnterior: '2025',
+          dataEmissao: '02/01/2027',
           socio: {
-            nome: cli.responsavel || '',
+            nome: cli.responsavel || 'JOSE JAILSON MOURATO DA SILVA',
             qualificacao: 'Sócio Administrador',
-            cpf: ''
+            cpf: '317.769.598-92'
           },
           contador: {
-            nome: 'Nilson / Responsável Técnico',
-            crc: 'CRC/SP',
-            cpf: ''
+            nome: 'Nilson Oliveira dos Santos',
+            crc: 'CRC/SP 215.114',
+            cpf: '086.986.408-42'
           }
         });
       }
 
       const savedFat = localStorage.getItem(`y7_fat_${cli.id}`);
-      setFaturamentoInput(savedFat ? Number(savedFat) : 0);
-    } else {
-      setSelectedClientId('');
-      setEmpresaData({
-        razaoSocial: '',
-        cnpj: '',
-        capitalSocial: 0,
-        regime: 'Simples Nacional',
-        anoExercicio: String(new Date().getFullYear()),
-        anoAnterior: String(new Date().getFullYear() - 1),
-        socio: { nome: '', qualificacao: 'Sócio Administrador', cpf: '' },
-        contador: { nome: 'Nilson / Responsável Técnico', crc: 'CRC/SP', cpf: '' }
-      });
-      setFaturamentoInput(0);
+      if (savedFat) {
+        setFaturamentoInput(Number(savedFat));
+      }
     }
   }, [selectedClientId, clients]);
+
+  // Carregar dados de um preset de PDF
+  const handleApplyPreset = (presetKey) => {
+    const p = PRESETS_PDF[presetKey];
+    if (p) {
+      setFaturamentoInput(p.faturamento);
+      setEmpresaData({
+        ...empresaData,
+        razaoSocial: p.razaoSocial,
+        cnpj: p.cnpj,
+        capitalSocial: p.capitalSocial,
+        anoExercicio: p.anoExercicio,
+        anoAnterior: p.anoAnterior,
+        dataEmissao: `02/01/${Number(p.anoExercicio) + 1}`,
+        socio: {
+          ...empresaData.socio,
+          nome: p.socioNome,
+          cpf: p.socioCpf
+        }
+      });
+    }
+  };
 
   // Total dos pesos mensais para normalização
   const somaPesos = useMemo(() => {
     return MODELO_ESTRUTURA.pesosMensais.reduce((acc, curr) => acc + curr.peso, 0);
   }, []);
 
-  // 1. CÁLCULO DINÂMICO DE FATURAMENTO MENSAL E ACUMULADO
+  // 1. CÁLCULO DINÂMICO DE FATURAMENTO MENSAL E ACUMULADO (ESTRUTURA DO PDF)
   const tabelaFaturamento = useMemo(() => {
     let acumulado = 0;
     const baseFat = Number(faturamentoInput) || 0;
-    return MODELO_ESTRUTURA.pesosMensais.map((item, index) => {
+    return MODELO_ESTRUTURA.pesosMensais.map((item) => {
       const part = somaPesos > 0 ? (item.peso / somaPesos) : 0;
       const valor = baseFat * part;
       acumulado += valor;
@@ -191,8 +296,6 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
 
   // 2. CÁLCULO DOS IMPOSTOS MENSAIS E ANUAIS (PIS, COFINS, CSLL, IRPJ)
   const tabelaImpostos = useMemo(() => {
-    // Alíquotas apuradas na planilha:
-    // PIS ~0.7166% | COFINS ~3.3074% | CSLL ~1.1906% | IRPJ ~2.6459%
     const aliqPIS = 0.00716595;
     const aliqCOFINS = 0.03307360;
     const aliqCSLL = 0.01190650;
@@ -228,27 +331,26 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
     }), { pis: 0, cofins: 0, csll: 0, irpj: 0, faturamento: 0, totalImpostos: 0 });
   }, [tabelaImpostos]);
 
-  // 3. CÁLCULO COMPLETO DA DRE CONFORME FÓRMULAS DA PLANILHA (COM CORREÇÃO DE IMPOSTOS ANUAIS)
+  // 3. CÁLCULO COMPLETO DA DRE CONFORME ESTRUTURA DO PDF
   const dreCalculada = useMemo(() => {
     const fat = faturamentoTotal;
 
     const receitaBruta = fat;
-    const deducoes = 0.038289084809646 * fat;
+    const deducoes = 0.033289084809646 * fat; // ~3.33% conforme modelo PDF
     const receitaLiquida = receitaBruta - deducoes;
-    const cmv = 0.715945999953816 * fat;
+    const cmv = 0.676945999953816 * fat; // CMV conforme modelo PDF
     const lucroBruto = receitaLiquida - cmv;
 
-    const despesasAdmin = 0.0219667318661517 * fat;
-    const servicosTerceiros = 0.0296587250698497 * fat;
-    const despesasFinanceiras = 0.00596140307609118 * fat;
+    const despesasAdmin = 0.0199667318661517 * fat;
+    const servicosTerceiros = 0.0266587250698497 * fat;
+    const despesasFinanceiras = 0.00426140307609118 * fat;
     const totalDespesasOperacionais = despesasAdmin + servicosTerceiros + despesasFinanceiras;
 
     const lucroOperacional = lucroBruto - totalDespesasOperacionais;
 
-    // CORREÇÃO CRÍTICA: Pegar o total anual apurado da provisão de CSLL e IRPJ
-    const csll = totaisImpostos.csll;
+    const csll = 0.0008387 * fat;
     const lair = lucroOperacional - csll;
-    const irpj = totaisImpostos.irpj;
+    const irpj = 0.0009125 * fat;
     const resultadoAntesPart = lair - irpj;
     const participacoes = 0.0151742049541289 * fat;
     const lucroLiquido = resultadoAntesPart - participacoes;
@@ -271,9 +373,9 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
       participacoes,
       lucroLiquido
     };
-  }, [faturamentoTotal, totaisImpostos]);
+  }, [faturamentoTotal]);
 
-  // Demonstrativo comparativo do exercício anterior (inicia limpo / zerado)
+  // Comparativo ano anterior
   const dreAnoAnterior = useMemo(() => ({
     receitaBruta: 0,
     deducoes: 0,
@@ -293,17 +395,17 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
     lucroLiquido: 0
   }), []);
 
-  // 4. CÁLCULO DO BALANÇO PATRIMONIAL ATIVO CONFORME FÓRMULAS DA PLANILHA
+  // 4. CÁLCULO DO BALANÇO PATRIMONIAL ATIVO CONFORME ESTRUTURA DO PDF
   const ativoCalculado = useMemo(() => {
     const fat = faturamentoTotal;
 
     // 1.1 Circulante
     const caixa = 0.0224899998899222 * fat;
-    const bancos = 0.0567759999171238 * fat;
-    const aplicacoes = 0.0511600001583176 * fat;
+    const bancos = 0.0767759999171238 * fat;
+    const aplicacoes = 0.1811600001583176 * fat;
     const totalDisponivel = caixa + bancos + aplicacoes;
 
-    const duplicatas = 0.441862999754904 * fat;
+    const duplicatas = 0.249962999754904 * fat;
     const duplicatasDescontadas = 0;
     const adiantamentos = 0;
     const impostosRecuperar = 0;
@@ -321,24 +423,24 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
     const totalCirculante = totalDisponivel + totalCreditos + totalEstoques + totalDespSeguinte;
 
     // 1.2 Não Circulante
-    const clientesLP = 0.0700799999943277 * fat;
+    const clientesLP = 0.0300799999943277 * fat;
     const investimentosLP = 0.018947853806805 * fat;
     const clientesDiversosLP = 0;
     const totalRealizavelLP = clientesLP + investimentosLP + clientesDiversosLP;
 
     const investimentos = 0;
 
-    const maquinas = 0;
-    const veiculos = 0.097100000173967 * fat;
-    const informatica = 0;
-    const instalacoes = 0;
+    // Imobilizado estruturado conforme PDF
+    const maquinas = 0.02663 * fat;
+    const veiculos = 0.05704 * fat;
+    const informatica = 0.00514 * fat;
+    const instalacoes = 0.02737 * fat;
     const depreciacao = -0.00678020184141549 * fat;
     const totalImobilizado = maquinas + veiculos + informatica + instalacoes + depreciacao;
 
     const diferido = 0;
 
     const totalNaoCirculante = totalRealizavelLP + investimentos + totalImobilizado + diferido;
-
     const totalAtivo = totalCirculante + totalNaoCirculante;
 
     return {
@@ -356,12 +458,12 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
     };
   }, [faturamentoTotal]);
 
-  // 5. CÁLCULO DO BALANÇO PATRIMONIAL PASSIVO CONFORME FÓRMULAS DA PLANILHA
+  // 5. CÁLCULO DO BALANÇO PATRIMONIAL PASSIVO CONFORME ESTRUTURA DO PDF
   const passivoCalculado = useMemo(() => {
     const fat = faturamentoTotal;
 
     // 2.1 Passivo Circulante
-    const fornecedores = 0;
+    const fornecedores = 0.11117765 * fat; // Conforme modelo PDF
     const obrigacoesFiscais = 0.0299999997720956 * fat;
     const irPagar = 0.022097327678201 * fat;
     const obrigacoesSociais = 0.00598469288119272 * fat;
@@ -380,19 +482,17 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
     const totalExerciciosFuturos = alugueisVencer + outrasReceitasVencer;
 
     // 2.4 Patrimônio Líquido
-    const capitalSocial = Number(empresaData.capitalSocial) || 200000;
+    const capitalSocial = Number(empresaData.capitalSocial) || 100000;
     const capitalRealizar = 0;
     const totalCapital = capitalSocial - capitalRealizar;
 
     const reservaLegal = fat * 0.0381; // 3.81%
     const totalReserva = reservaLegal;
 
-    // Lucro do período vem diretamente da DRE!
+    // Lucro do período vem diretamente da DRE
     const lucroPeriodo = dreCalculada.lucroLiquido;
 
-    // Fechamento da contrapartida patrimonial:
-    // Para que Ativo = Passivo (consistência contábil perfeita), o saldo remanescente
-    // compõe os Lucros Acumulados do Patrimônio Líquido:
+    // Contrapartida patrimonial para Ativo = Passivo
     const passivoExigivelEPLParcial = totalCirculante + totalNaoCirculante + totalExerciciosFuturos + totalCapital + totalReserva + lucroPeriodo;
     const lucrosAcumuladosBalanceados = ativoCalculado.totalAtivo - passivoExigivelEPLParcial;
 
@@ -429,7 +529,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
             responsavel: empresaData.socio?.nome || currentClient.responsavel
           });
         } catch (e) {
-          console.warn('Erro ao atualizar cliente via demonstrativo:', e);
+          console.warn('Erro ao atualizar cliente:', e);
         }
       }
     }
@@ -437,11 +537,18 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
     setTimeout(() => setSaveSuccessMessage(false), 3000);
   };
 
-  const handlePrint = () => {
+  const handlePrintSpecific = (mode) => {
+    if (mode) {
+      setReportViewMode(mode);
+    }
     setActiveTab('relatorio');
     setTimeout(() => {
       window.print();
-    }, 150);
+    }, 200);
+  };
+
+  const handlePrint = () => {
+    handlePrintSpecific(reportViewMode || 'unificado');
   };
 
   const formatBRL = (val) => {
@@ -459,7 +566,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
   return (
     <div style={{ color: '#F8FAFC' }}>
       {/* ========================================================
-          BARRA DE FERRAMENTAS E SELEÇÃO DE CLIENTE / DEMONSTRATIVO
+          BARRA DE FERRAMENTAS ORIGINAL Y7 COM BOTÕES CLÁSSICOS
          ======================================================== */}
       <div className="no-print glass-panel editor-toolbar" style={{
         padding: '16px 20px',
@@ -469,39 +576,52 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
         alignItems: 'center',
         flexWrap: 'wrap',
         gap: '16px',
-        border: '1px solid rgba(56, 189, 248, 0.25)',
-        background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%)'
+        backgroundColor: 'rgba(10, 15, 29, 0.95)',
+        border: '1px solid rgba(56, 189, 248, 0.2)'
       }}>
-        <div className="editor-toolbar-controls" style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', flex: 1 }}>
-          <div style={{ flex: '1 1 260px', minWidth: 0 }}>
-            <label style={{ fontSize: '0.75rem', color: '#94A3B8', textTransform: 'uppercase', fontWeight: 700, display: 'block', marginBottom: '4px' }}>
+        {/* Controles de Empresa, Faturamento e Data de Emissão em Linha Única */}
+        <div className="editor-toolbar-controls" style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+          <div style={{ width: '240px', minWidth: '220px' }}>
+            <label style={{ fontSize: '0.72rem', color: '#94A3B8', textTransform: 'uppercase', fontWeight: 700, display: 'block', marginBottom: '3px' }}>
               Empresa / Cliente Selecionado
             </label>
             <select
               className="form-control"
-              style={{ width: '100%', maxWidth: '100%', padding: '8px 12px', fontSize: '0.88rem', fontWeight: 600, color: '#38BDF8' }}
+              style={{ width: '100%', padding: '7px 10px', fontSize: '0.84rem', fontWeight: 600, color: '#38BDF8' }}
               value={selectedClientId}
-              onChange={(e) => setSelectedClientId(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val.startsWith('preset_')) {
+                  handleApplyPreset(val.replace('preset_', ''));
+                } else {
+                  setSelectedClientId(val);
+                }
+              }}
             >
-              {clients.length === 0 ? (
-                <option value="">Nenhum cliente cadastrado (Cadastre em Clientes)</option>
-              ) : (
-                clients.map(c => (
-                  <option key={c.id} value={c.id}>{c.razaoSocial || c.nomeFantasia} ({c.regime || 'Simples'})</option>
-                ))
+              <optgroup label="Modelos Oficiais (PDF)">
+                <option value="preset_p2026">Mourato e Associados (Exercício 2026 - R$ 1,40M)</option>
+                <option value="preset_p2025">Jose Jailson Mourato (Exercício 2025 - R$ 1,38M)</option>
+                <option value="preset_p2024">Jose Jailson Mourato (Exercício 2024 - R$ 1,20M)</option>
+              </optgroup>
+              {clients.length > 0 && (
+                <optgroup label="Clientes do Sistema">
+                  {clients.map(c => (
+                    <option key={c.id} value={c.id}>{c.razaoSocial || c.nomeFantasia} ({c.regime || 'Simples'})</option>
+                  ))}
+                </optgroup>
               )}
             </select>
           </div>
 
-          <div style={{ flex: '1 1 180px', minWidth: 0 }}>
-            <label style={{ fontSize: '0.75rem', color: '#94A3B8', textTransform: 'uppercase', fontWeight: 700, display: 'block', marginBottom: '4px' }}>
-              Faturamento Anual Desejado (R$)
+          <div style={{ width: '170px', minWidth: '160px' }}>
+            <label style={{ fontSize: '0.72rem', color: '#94A3B8', textTransform: 'uppercase', fontWeight: 700, display: 'block', marginBottom: '3px' }}>
+              Faturamento Anual (R$)
             </label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <input
                 type="number"
                 className="form-control mono"
-                style={{ flex: 1, minWidth: 0, padding: '8px 12px', fontSize: '0.9rem', fontWeight: 700, color: '#00F5D4' }}
+                style={{ flex: 1, minWidth: 0, padding: '7px 10px', fontSize: '0.88rem', fontWeight: 700, color: '#00F5D4' }}
                 value={faturamentoInput === 0 || faturamentoInput === '' ? '' : faturamentoInput}
                 onChange={(e) => {
                   const raw = e.target.value.replace(/^0+(?=\d)/, '');
@@ -519,47 +639,68 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
                 onClick={() => setFaturamentoInput('')}
                 className="btn btn-secondary btn-sm"
                 title="Zerar Faturamento"
-                style={{ padding: '8px', flexShrink: 0 }}
+                style={{ padding: '7px 8px', flexShrink: 0 }}
               >
-                <RotateCcw size={14} />
+                <RotateCcw size={13} />
+              </button>
+            </div>
+          </div>
+
+          {/* NOVO: Campo de Data de Emissão que sai nas impressões */}
+          <div style={{ width: '160px', minWidth: '150px' }}>
+            <label style={{ fontSize: '0.72rem', color: '#94A3B8', textTransform: 'uppercase', fontWeight: 700, display: 'block', marginBottom: '3px' }}>
+              Data Emissão (Impressão)
+            </label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <input
+                type="text"
+                className="form-control mono"
+                style={{ flex: 1, minWidth: 0, padding: '7px 10px', fontSize: '0.88rem', fontWeight: 700, color: '#38BDF8' }}
+                value={empresaData.dataEmissao || ''}
+                onChange={(e) => setEmpresaData(prev => ({ ...prev, dataEmissao: e.target.value }))}
+                placeholder="02/01/2027"
+                title="Data oficial que constará no cabeçalho e assinaturas da impressão"
+              />
+              <button
+                type="button"
+                onClick={() => setEmpresaData(prev => ({ ...prev, dataEmissao: `02/01/${Number(prev.anoExercicio || 2026) + 1}` }))}
+                className="btn btn-secondary btn-sm"
+                title="Restaurar data padrão"
+                style={{ padding: '7px 8px', flexShrink: 0 }}
+              >
+                <RotateCcw size={13} />
               </button>
             </div>
           </div>
         </div>
 
-        {/* Botões de Ação Rápida */}
-        <div className="editor-toolbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+        {/* Botões de Ação Rápida com Funções de Impressão Separadas */}
+        <div className="editor-toolbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           {saveSuccessMessage && (
-            <span style={{ color: '#10B981', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
-              <CheckCircle2 size={16} /> Salvo com Sucesso!
+            <span style={{ color: '#10B981', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
+              <CheckCircle2 size={15} /> Salvo!
             </span>
           )}
 
-          <a
-            href="/Modelo_Balanco_DRE_Faturamento_Y7.xlsx"
-            download="Modelo_Balanco_DRE_Faturamento_Y7.xlsx"
-            className="btn btn-secondary btn-sm"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-            title="Baixar planilha original corrigida em formato Excel (.xlsx)"
-          >
-            <Download size={15} color="#10B981" />
-            <span>Baixar Planilha (.xlsx)</span>
-          </a>
-
-          <button onClick={handleSave} className="btn btn-secondary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-            <Save size={15} color="#38BDF8" />
+          <button onClick={handleSave} className="btn btn-ruby btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '7px 11px' }}>
+            <Save size={14} />
             <span>Salvar Alterações</span>
           </button>
 
-          <button onClick={handlePrint} className="btn btn-ruby btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-            <Printer size={15} />
-            <span>Imprimir / Gerar PDF</span>
+          <button 
+            onClick={handlePrint} 
+            className="btn btn-ruby btn-sm" 
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '7px 12px' }}
+            title="Imprimir relatório contábil oficial em PDF"
+          >
+            <Printer size={14} />
+            <span>Imprimir Relatório (PDF)</span>
           </button>
         </div>
       </div>
 
       {/* ========================================================
-          NAVEGADOR DE ABAS DO PAINEL (IDÊNTICO ÀS ABAS DO EXCEL)
+          NAVEGADOR DE ABAS DO PAINEL (FORMATO ORIGINAL Y7)
          ======================================================== */}
       <div className="no-print editor-nav-tabs" style={{
         display: 'flex',
@@ -609,7 +750,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
       </div>
 
       {/* ========================================================
-          CARD DE EQUILÍBRIO E STATUS CONTÁBIL
+          CARD DE EQUILÍBRIO E STATUS CONTÁBIL ORIGINAL
          ======================================================== */}
       <div className="no-print glass-panel" style={{
         padding: '14px 20px',
@@ -669,7 +810,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
       </div>
 
       {/* ========================================================
-          CONTEÚDO DA ABA 1: DRE OFICIAL
+          CONTEÚDO DA ABA 1: DRE OFICIAL (COM ESTRUTURA DO PDF)
          ======================================================== */}
       {activeTab === 'dre' && (
         <div className="glass-panel animate-fade-in" style={{ padding: '24px', marginBottom: '24px' }}>
@@ -684,8 +825,20 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
               </div>
             </div>
 
-            <div style={{ fontSize: '0.82rem', color: '#38BDF8', backgroundColor: 'rgba(56, 189, 248, 0.1)', padding: '5px 12px', borderRadius: '4px' }}>
-              Impostos integrados da Declaração de Faturamento (CSLL e IRPJ anuais)
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => handlePrintSpecific('dre')}
+                className="btn btn-ruby btn-sm"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                title="Imprimir Demonstração do Resultado do Exercício Oficial"
+              >
+                <Printer size={15} />
+                <span>Imprimir DRE</span>
+              </button>
+              <div style={{ fontSize: '0.82rem', color: '#38BDF8', backgroundColor: 'rgba(56, 189, 248, 0.1)', padding: '5px 12px', borderRadius: '4px' }}>
+                Estrutura Contábil Calibrada conforme Modelo Oficial dos PDFs
+              </div>
             </div>
           </div>
 
@@ -696,6 +849,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
                   <th style={{ padding: '10px 14px', textAlign: 'left', width: '100px' }}>CÓDIGO</th>
                   <th style={{ padding: '10px 14px', textAlign: 'left' }}>DESCRIÇÃO DA CONTA</th>
                   <th style={{ padding: '10px 14px', textAlign: 'right', width: '180px' }}>{empresaData.anoExercicio} (R$)</th>
+                  <th style={{ padding: '10px 14px', textAlign: 'right', width: '140px' }}>PART. (%)</th>
                   <th style={{ padding: '10px 14px', textAlign: 'right', width: '180px' }}>{empresaData.anoAnterior} (R$)</th>
                 </tr>
               </thead>
@@ -711,7 +865,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
 
                 <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
                   <td className="mono" style={{ padding: '8px 14px 8px 24px', color: '#94A3B8' }}>4.1</td>
-                  <td style={{ padding: '8px 14px 8px 24px', color: '#CBD5E1' }}>Receita Bruta de Vendas e Serviços</td>
+                  <td style={{ padding: '8px 14px 8px 24px', color: '#CBD5E1' }}>Receita Bruta de Vendas</td>
                   <td className="mono" style={{ padding: '8px 14px', textAlign: 'right' }}>{formatBRL(dreCalculada.receitaBruta)}</td>
                   <td className="mono" style={{ padding: '8px 14px', textAlign: 'right', color: '#94A3B8' }}>100,00%</td>
                   <td className="mono" style={{ padding: '8px 14px', textAlign: 'right', color: '#94A3B8' }}>{formatBRL(dreAnoAnterior.receitaBruta)}</td>
@@ -722,7 +876,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
                   <td className="mono" style={{ padding: '8px 14px', color: '#EF4444' }}>(-)4.1.2</td>
                   <td style={{ padding: '8px 14px', color: '#F87171', fontWeight: 600 }}>DEDUÇÕES DA RECEITA BRUTA</td>
                   <td className="mono" style={{ padding: '8px 14px', textAlign: 'right', color: '#EF4444' }}>- {formatBRL(dreCalculada.deducoes)}</td>
-                  <td className="mono" style={{ padding: '8px 14px', textAlign: 'right', color: '#EF4444' }}>-3,83%</td>
+                  <td className="mono" style={{ padding: '8px 14px', textAlign: 'right', color: '#EF4444' }}>-3,33%</td>
                   <td className="mono" style={{ padding: '8px 14px', textAlign: 'right', color: '#EF4444' }}>- {formatBRL(dreAnoAnterior.deducoes)}</td>
                 </tr>
 
@@ -730,7 +884,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
                   <td className="mono" style={{ padding: '7px 14px 7px 24px', color: '#94A3B8' }}>4.1.2.001</td>
                   <td style={{ padding: '7px 14px 7px 24px', color: '#94A3B8' }}>Deduções e Abatimentos de Vendas e Serviços</td>
                   <td className="mono" style={{ padding: '7px 14px', textAlign: 'right', color: '#EF4444' }}>- {formatBRL(dreCalculada.deducoes)}</td>
-                  <td className="mono" style={{ padding: '7px 14px', textAlign: 'right', color: '#94A3B8' }}>-3,83%</td>
+                  <td className="mono" style={{ padding: '7px 14px', textAlign: 'right', color: '#94A3B8' }}>-3,33%</td>
                   <td className="mono" style={{ padding: '7px 14px', textAlign: 'right', color: '#94A3B8' }}>- {formatBRL(dreAnoAnterior.deducoes)}</td>
                 </tr>
 
@@ -748,8 +902,16 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
                   <td className="mono" style={{ padding: '8px 14px', color: '#EF4444' }}>(-)4.1.1.007</td>
                   <td style={{ padding: '8px 14px', color: '#F87171' }}>CUSTO DAS MERCADORIAS VENDIDAS – CMV</td>
                   <td className="mono" style={{ padding: '8px 14px', textAlign: 'right', color: '#EF4444' }}>- {formatBRL(dreCalculada.cmv)}</td>
-                  <td className="mono" style={{ padding: '8px 14px', textAlign: 'right', color: '#EF4444' }}>-71,59%</td>
+                  <td className="mono" style={{ padding: '8px 14px', textAlign: 'right', color: '#EF4444' }}>-67,69%</td>
                   <td className="mono" style={{ padding: '8px 14px', textAlign: 'right', color: '#EF4444' }}>- {formatBRL(dreAnoAnterior.cmv)}</td>
+                </tr>
+
+                <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                  <td className="mono" style={{ padding: '7px 14px 7px 24px', color: '#94A3B8' }}>4.1.1.007a</td>
+                  <td style={{ padding: '7px 14px 7px 24px', color: '#94A3B8' }}>Custo das Mercadorias e ou Serviços</td>
+                  <td className="mono" style={{ padding: '7px 14px', textAlign: 'right', color: '#EF4444' }}>- {formatBRL(dreCalculada.cmv)}</td>
+                  <td className="mono" style={{ padding: '7px 14px', textAlign: 'right', color: '#94A3B8' }}>-67,69%</td>
+                  <td className="mono" style={{ padding: '7px 14px', textAlign: 'right', color: '#94A3B8' }}>- {formatBRL(dreAnoAnterior.cmv)}</td>
                 </tr>
 
                 {/* LUCRO BRUTO */}
@@ -766,7 +928,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
                   <td className="mono" style={{ padding: '8px 14px', color: '#EF4444' }}>3.3</td>
                   <td style={{ padding: '8px 14px', color: '#F87171', fontWeight: 600 }}>DESPESAS OPERACIONAIS</td>
                   <td className="mono" style={{ padding: '8px 14px', textAlign: 'right', color: '#EF4444' }}>- {formatBRL(dreCalculada.totalDespesasOperacionais)}</td>
-                  <td className="mono" style={{ padding: '8px 14px', textAlign: 'right', color: '#EF4444' }}>-5,76%</td>
+                  <td className="mono" style={{ padding: '8px 14px', textAlign: 'right', color: '#EF4444' }}>-5,09%</td>
                   <td className="mono" style={{ padding: '8px 14px', textAlign: 'right', color: '#EF4444' }}>- {formatBRL(dreAnoAnterior.totalDespesasOperacionais)}</td>
                 </tr>
 
@@ -774,7 +936,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
                   <td className="mono" style={{ padding: '7px 14px 7px 24px', color: '#94A3B8' }}>3.3.2</td>
                   <td style={{ padding: '7px 14px 7px 24px', color: '#94A3B8' }}>Despesas Administrativas</td>
                   <td className="mono" style={{ padding: '7px 14px', textAlign: 'right', color: '#EF4444' }}>- {formatBRL(dreCalculada.despesasAdmin)}</td>
-                  <td className="mono" style={{ padding: '7px 14px', textAlign: 'right', color: '#94A3B8' }}>-2,20%</td>
+                  <td className="mono" style={{ padding: '7px 14px', textAlign: 'right', color: '#94A3B8' }}>-2,00%</td>
                   <td className="mono" style={{ padding: '7px 14px', textAlign: 'right', color: '#94A3B8' }}>- {formatBRL(dreAnoAnterior.despesasAdmin)}</td>
                 </tr>
 
@@ -782,7 +944,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
                   <td className="mono" style={{ padding: '7px 14px 7px 24px', color: '#94A3B8' }}>3.3.9</td>
                   <td style={{ padding: '7px 14px 7px 24px', color: '#94A3B8' }}>Serviços de Terceiros</td>
                   <td className="mono" style={{ padding: '7px 14px', textAlign: 'right', color: '#EF4444' }}>- {formatBRL(dreCalculada.servicosTerceiros)}</td>
-                  <td className="mono" style={{ padding: '7px 14px', textAlign: 'right', color: '#94A3B8' }}>-2,97%</td>
+                  <td className="mono" style={{ padding: '7px 14px', textAlign: 'right', color: '#94A3B8' }}>-2,67%</td>
                   <td className="mono" style={{ padding: '7px 14px', textAlign: 'right', color: '#94A3B8' }}>- {formatBRL(dreAnoAnterior.servicosTerceiros)}</td>
                 </tr>
 
@@ -790,7 +952,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
                   <td className="mono" style={{ padding: '7px 14px 7px 24px', color: '#94A3B8' }}>3.3.3</td>
                   <td style={{ padding: '7px 14px 7px 24px', color: '#94A3B8' }}>Despesas Financeiras</td>
                   <td className="mono" style={{ padding: '7px 14px', textAlign: 'right', color: '#EF4444' }}>- {formatBRL(dreCalculada.despesasFinanceiras)}</td>
-                  <td className="mono" style={{ padding: '7px 14px', textAlign: 'right', color: '#94A3B8' }}>-0,60%</td>
+                  <td className="mono" style={{ padding: '7px 14px', textAlign: 'right', color: '#94A3B8' }}>-0,43%</td>
                   <td className="mono" style={{ padding: '7px 14px', textAlign: 'right', color: '#94A3B8' }}>- {formatBRL(dreAnoAnterior.despesasFinanceiras)}</td>
                 </tr>
 
@@ -808,14 +970,14 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
                   <td className="mono" style={{ padding: '8px 14px', color: '#EF4444' }}>5.1a</td>
                   <td style={{ padding: '8px 14px', color: '#CBD5E1' }}>(-) Despesa com Provisão para CSLL</td>
                   <td className="mono" style={{ padding: '8px 14px', textAlign: 'right', color: '#EF4444' }}>- {formatBRL(dreCalculada.csll)}</td>
-                  <td className="mono" style={{ padding: '8px 14px', textAlign: 'right', color: '#EF4444' }}>-1,19%</td>
+                  <td className="mono" style={{ padding: '8px 14px', textAlign: 'right', color: '#EF4444' }}>-0,08%</td>
                   <td className="mono" style={{ padding: '8px 14px', textAlign: 'right', color: '#EF4444' }}>- {formatBRL(dreAnoAnterior.csll)}</td>
                 </tr>
 
                 {/* RESULTADO ANTES DO IR */}
                 <tr className="highlight-row" style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)', fontWeight: 700, borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
                   <td className="mono" style={{ padding: '9px 14px' }}>5.1.1</td>
-                  <td style={{ padding: '9px 14px' }}>RESULTADO ANTES DO IMPOSTO DE RENDA (LAIR)</td>
+                  <td style={{ padding: '9px 14px' }}>RESULTADO ANTES DO IMPOSTO DE RENDA</td>
                   <td className="mono" style={{ padding: '9px 14px', textAlign: 'right', color: '#FFFFFF' }}>{formatBRL(dreCalculada.lair)}</td>
                   <td className="mono" style={{ padding: '9px 14px', textAlign: 'right' }}>{formatPct(dreCalculada.receitaBruta > 0 ? (dreCalculada.lair / dreCalculada.receitaBruta) : 0)}</td>
                   <td className="mono" style={{ padding: '9px 14px', textAlign: 'right', color: '#94A3B8' }}>{formatBRL(dreAnoAnterior.lair)}</td>
@@ -826,7 +988,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
                   <td className="mono" style={{ padding: '8px 14px', color: '#EF4444' }}>5.1.1.001</td>
                   <td style={{ padding: '8px 14px', color: '#CBD5E1' }}>(-) Despesa com Provisão para Imposto de Renda</td>
                   <td className="mono" style={{ padding: '8px 14px', textAlign: 'right', color: '#EF4444' }}>- {formatBRL(dreCalculada.irpj)}</td>
-                  <td className="mono" style={{ padding: '8px 14px', textAlign: 'right', color: '#EF4444' }}>-2,65%</td>
+                  <td className="mono" style={{ padding: '8px 14px', textAlign: 'right', color: '#EF4444' }}>-0,09%</td>
                   <td className="mono" style={{ padding: '8px 14px', textAlign: 'right', color: '#EF4444' }}>- {formatBRL(dreAnoAnterior.irpj)}</td>
                 </tr>
 
@@ -867,7 +1029,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
       )}
 
       {/* ========================================================
-          CONTEÚDO DA ABA 2: BALANÇO PATRIMONIAL (ATIVO E PASSIVO)
+          CONTEÚDO DA ABA 2: BALANÇO PATRIMONIAL ANALÍTICO (PDF)
          ======================================================== */}
       {activeTab === 'balanco' && (
         <div className="glass-panel animate-fade-in" style={{ padding: '24px', marginBottom: '24px' }}>
@@ -878,11 +1040,21 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
                 <span>Balanço Patrimonial Analítico</span>
               </h3>
               <div style={{ fontSize: '0.82rem', color: '#94A3B8' }}>
-                {empresaData.razaoSocial} • Encerrado em 31 de Dezembro de {empresaData.anoExercicio} (e comparativo {empresaData.anoAnterior})
+                {empresaData.razaoSocial} • Encerrado em {empresaData.anoExercicio}
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => handlePrintSpecific('balanco')}
+                className="btn btn-ruby btn-sm"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                title="Imprimir Balanço Patrimonial Oficial"
+              >
+                <Printer size={15} />
+                <span>Imprimir Balanço</span>
+              </button>
               <div style={{ fontSize: '0.84rem', color: '#38BDF8', fontWeight: 700 }}>
                 Ativo: {formatBRL(ativoCalculado.totalAtivo)}
               </div>
@@ -963,8 +1135,20 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
 
                   <div style={{ fontWeight: 600, color: '#38BDF8', margin: '8px 0 4px 0' }}>1.2.3 IMOBILIZADO ({formatBRL(ativoCalculado.totalImobilizado)})</div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94A3B8', padding: '2px 0 2px 10px' }}>
+                    <span>1.2.3.001 Máquinas</span>
+                    <span className="mono">{formatBRL(ativoCalculado.maquinas)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94A3B8', padding: '2px 0 2px 10px' }}>
                     <span>1.2.3.002 Veículos</span>
                     <span className="mono">{formatBRL(ativoCalculado.veiculos)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94A3B8', padding: '2px 0 2px 10px' }}>
+                    <span>1.2.3.003 Equipamentos de Informática</span>
+                    <span className="mono">{formatBRL(ativoCalculado.informatica)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94A3B8', padding: '2px 0 2px 10px' }}>
+                    <span>1.2.3.004 Instalações</span>
+                    <span className="mono">{formatBRL(ativoCalculado.instalacoes)}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', color: '#EF4444', padding: '2px 0 2px 10px' }}>
                     <span>(-)1.2.3.005 (-) Depreciação Acumulada</span>
@@ -990,6 +1174,10 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
 
                 <div style={{ paddingLeft: '12px', margin: '6px 0 12px 0' }}>
                   <div style={{ fontWeight: 600, color: '#F87171', margin: '4px 0' }}>2.1.1 OBRIGAÇÕES ({formatBRL(passivoCalculado.totalCirculante)})</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94A3B8', padding: '2px 0 2px 10px' }}>
+                    <span>2.1.1.001 Fornecedores</span>
+                    <span className="mono">{formatBRL(passivoCalculado.fornecedores)}</span>
+                  </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94A3B8', padding: '2px 0 2px 10px' }}>
                     <span>2.1.1.002 Obrigações Fiscais</span>
                     <span className="mono">{formatBRL(passivoCalculado.obrigacoesFiscais)}</span>
@@ -1039,7 +1227,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
       )}
 
       {/* ========================================================
-          CONTEÚDO DA ABA 3: FATURAMENTO 12 MESES
+          CONTEÚDO DA ABA 3: FATURAMENTO 12 MESES ORIGINAL
          ======================================================== */}
       {activeTab === 'faturamento' && (
         <div className="glass-panel animate-fade-in" style={{ padding: '24px', marginBottom: '24px' }}>
@@ -1050,11 +1238,21 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
                 <span>Declaração de Faturamento – 12 Meses</span>
               </h3>
               <div style={{ fontSize: '0.82rem', color: '#94A3B8' }}>
-                Distribuição ponderada mensal conforme modelo de sazonalidade da planilha Y7
+                Distribuição ponderada mensal conforme modelo de sazonalidade dos PDFs
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => handlePrintSpecific('faturamento')}
+                className="btn btn-ruby btn-sm"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                title="Imprimir Declaração de Faturamento 12 Meses Oficial"
+              >
+                <Printer size={15} />
+                <span>Imprimir 12 Meses</span>
+              </button>
               <span style={{ fontSize: '0.84rem', color: '#94A3B8' }}>Total Declarado Anual:</span>
               <span className="mono" style={{ fontSize: '1.1rem', fontWeight: 800, color: '#00F5D4' }}>
                 {formatBRL(faturamentoTotal)}
@@ -1117,8 +1315,20 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
               </div>
             </div>
 
-            <div style={{ fontSize: '0.84rem', color: '#10B981', fontWeight: 700 }}>
-              Total Impostos Federais: {formatBRL(totaisImpostos.totalImpostos)}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => handlePrintSpecific('impostos')}
+                className="btn btn-ruby btn-sm"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                title="Imprimir Declaração de Apuração de Impostos Oficial"
+              >
+                <Printer size={15} />
+                <span>Imprimir Impostos</span>
+              </button>
+              <div style={{ fontSize: '0.84rem', color: '#10B981', fontWeight: 700 }}>
+                Total Impostos Federais: {formatBRL(totaisImpostos.totalImpostos)}
+              </div>
             </div>
           </div>
 
@@ -1169,7 +1379,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
         <div className="glass-panel animate-fade-in" style={{ padding: '24px', marginBottom: '24px' }}>
           <h3 style={{ fontSize: '1.2rem', color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '18px' }}>
             <Building2 size={20} color="#38BDF8" />
-            <span>Cadastro da Empresa & Responsáveis Técnicos (Planilha Y7)</span>
+            <span>Cadastro da Empresa & Responsáveis Técnicos</span>
           </h3>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '18px' }}>
@@ -1209,6 +1419,39 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
                   }
                 }}
                 placeholder="0,00"
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Encerramento do Exercício (Cabeçalho da Impressão)</label>
+              <input
+                type="text"
+                className="form-control"
+                value={empresaData.textoExercicio !== undefined ? empresaData.textoExercicio : `Exercício Encerrado em 31/12/${empresaData.anoExercicio || '2026'}`}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const anoMatch = val.match(/\b(20\d\d)\b/);
+                  const novoAno = anoMatch ? anoMatch[1] : empresaData.anoExercicio;
+                  const novoAnoAnterior = anoMatch ? String(Number(anoMatch[1]) - 1) : empresaData.anoAnterior;
+                  setEmpresaData(prev => ({
+                    ...prev,
+                    textoExercicio: val,
+                    anoExercicio: novoAno,
+                    anoAnterior: novoAnoAnterior
+                  }));
+                }}
+                placeholder="Exercício Encerrado em 31/12/2025"
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Data de Emissão (Impressão e Assinatura)</label>
+              <input
+                type="text"
+                className="form-control mono"
+                value={empresaData.dataEmissao || ''}
+                onChange={(e) => setEmpresaData(prev => ({ ...prev, dataEmissao: e.target.value }))}
+                placeholder="02/01/2027"
               />
             </div>
 
@@ -1281,7 +1524,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
       )}
 
       {/* ========================================================
-          DOCUMENTO OFICIAL IMPRESSÍVEL (PAPEL TIMBRADO A4)
+          DOCUMENTO OFICIAL IMPRESSÍVEL (PAPEL TIMBRADO ORIGINAL Y7)
           Visível na aba "relatorio" e sempre ativo para @media print
          ======================================================== */}
       {(activeTab === 'relatorio' || true) && (
@@ -1314,7 +1557,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
                   color: '#FFFFFF'
                 }}
               >
-                Caderno Completo (DRE + Balanço)
+                Caderno Completo (Todas)
               </button>
               <button
                 type="button"
@@ -1325,7 +1568,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
                   color: '#FFFFFF'
                 }}
               >
-                Apenas DRE
+                DRE Oficial
               </button>
               <button
                 type="button"
@@ -1336,7 +1579,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
                   color: '#FFFFFF'
                 }}
               >
-                Apenas Balanço
+                Balanço Patrimonial
               </button>
               <button
                 type="button"
@@ -1347,17 +1590,74 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
                   color: '#FFFFFF'
                 }}
               >
-                Apenas Faturamento 12M
+                Faturamento 12M
+              </button>
+              <button
+                type="button"
+                onClick={() => setReportViewMode('impostos')}
+                className="btn btn-sm"
+                style={{
+                  backgroundColor: reportViewMode === 'impostos' ? '#C81E3D' : 'rgba(255, 255, 255, 0.05)',
+                  color: '#FFFFFF'
+                }}
+              >
+                Declaração de Impostos
               </button>
             </div>
 
-            <button onClick={handlePrint} className="btn btn-ruby btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-              <Printer size={15} />
-              <span>Imprimir / Gerar PDF</span>
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => setIsReportEditing(!isReportEditing)}
+                className="btn btn-secondary btn-sm"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                title="Ativar modo de edição direta nesta demonstração"
+              >
+                <Edit3 size={15} color={isReportEditing ? '#10B981' : '#38BDF8'} />
+                <span>{isReportEditing ? 'Concluir Edição' : 'Editar na Folha'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handlePrintSpecific(reportViewMode)}
+                className="btn btn-ruby btn-sm"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              >
+                <Printer size={15} />
+                <span>
+                  {reportViewMode === 'dre' ? 'Imprimir DRE' :
+                   reportViewMode === 'balanco' ? 'Imprimir Balanço' :
+                   reportViewMode === 'faturamento' ? 'Imprimir 12 Meses' :
+                   reportViewMode === 'impostos' ? 'Imprimir Impostos' : 'Imprimir Caderno Completo'}
+                </span>
+              </button>
+            </div>
           </div>
 
-          {/* Cabeçalho do Papel Timbrado Oficial - Y7 Service */}
+          {/* Barra auxiliar de Edição Direta quando ativa */}
+          {isReportEditing && (
+            <div className="no-print animate-fade-in" style={{
+              backgroundColor: 'rgba(56, 189, 248, 0.08)',
+              border: '1px solid rgba(56, 189, 248, 0.25)',
+              borderRadius: '8px',
+              padding: '12px 18px',
+              marginBottom: '18px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '12px',
+              flexWrap: 'wrap'
+            }}>
+              <div style={{ fontSize: '0.86rem', color: '#CBD5E1', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Edit3 size={16} color="#00F5D4" />
+                <span>
+                  <strong>Modo de Edição Ativo:</strong> Altere os dados diretamente nos campos da folha. Na impressão ou PDF, o documento sairá perfeitamente timbrado sem bordas de edição.
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Cabeçalho do Papel Timbrado Oficial - Y7 Service com Logo da Empresa */}
           <div className="report-header" style={{
             position: 'relative',
             display: 'flex',
@@ -1365,20 +1665,20 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
             alignItems: 'center',
             justifyContent: 'center',
             textAlign: 'center',
-            borderBottom: '2px solid #C81E3D',
-            paddingBottom: '10px',
-            marginBottom: '14px',
-            gap: '3px'
+            borderBottom: '2.5px solid #C81E3D',
+            paddingBottom: '16px',
+            marginBottom: '18px',
+            gap: '8px'
           }}>
-            {/* Logo como Marca d'Água no Cabeçalho */}
+            {/* Marca d'água de fundo */}
             <div className="report-watermark" style={{
               position: 'absolute',
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              width: '140px',
-              height: '140px',
-              opacity: 0.16,
+              width: '160px',
+              height: '160px',
+              opacity: 0.12,
               pointerEvents: 'none',
               zIndex: 0,
               userSelect: 'none'
@@ -1390,64 +1690,123 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
               />
             </div>
 
-            <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', width: '100%' }}>
-              <div className="report-header-title" style={{
-                fontSize: '1.35rem',
-                fontWeight: 900,
-                color: '#FFFFFF',
-                letterSpacing: '0.04em',
-                lineHeight: 1.2,
-                textAlign: 'center'
+            {/* Logo da Empresa Y7 (exibido na tela, ocultado na impressão para ficar só a marca d'água) */}
+            <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '14px' }}>
+              <div className="report-logo-badge" style={{
+                width: '56px',
+                height: '56px',
+                borderRadius: '8px',
+                overflow: 'hidden',
+                border: '2px solid #C81E3D',
+                backgroundColor: '#0a0f1d',
+                flexShrink: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}>
-                Y7 SERVICE LTDA
+                <img 
+                  src="/assets/y7_logo_emblema.jpg" 
+                  alt="Y7 Service" 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.parentElement.innerHTML = '<span style="color:#C81E3D;font-weight:900;font-size:20px;">Y7</span>';
+                  }}
+                />
               </div>
-              <div className="report-header-subtitle" style={{
-                fontSize: '0.74rem',
-                color: '#94A3B8',
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-                textAlign: 'center',
-                marginTop: '2px'
-              }}>
-                Assessoria Contábil, Auditoria & Gestão Tributária Estratégica
+              <div className="report-title-block" style={{ textAlign: 'left' }}>
+                <div className="report-header-title" style={{ fontSize: '1.6rem', fontWeight: 900, color: '#FFFFFF', letterSpacing: '0.04em', lineHeight: 1.1 }}>
+                  Y7 SERVICE LTDA
+                </div>
+                <div className="report-header-subtitle" style={{ fontSize: '0.82rem', color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Assessoria Contábil, Auditoria & Gestão Tributária Estratégica
+                </div>
               </div>
             </div>
 
-            <div className="report-header-contact" style={{
-              position: 'relative',
-              zIndex: 1,
-              fontSize: '0.74rem',
-              color: '#CBD5E1',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '2px',
-              marginTop: '4px',
-              textAlign: 'center'
-            }}>
-              <div><strong>CNPJ:</strong> {Y7_INFO.cnpj}</div>
-              <div><strong>Endereço:</strong> Av. Copacabana, 112 - Sala 1712, Alphaville - Barueri/SP</div>
-              <div><strong>E-mail:</strong> {Y7_INFO.contatos.email}</div>
+            <div className="report-header-contact" style={{ position: 'relative', zIndex: 1, fontSize: '0.82rem', color: '#CBD5E1', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '20px', marginTop: '6px' }}>
+              <span><strong>CNPJ</strong> {Y7_INFO.cnpj}</span>
+              <span><strong>Endereço</strong> Av. Copacabana 112 Sala 1712 Alphaville Barueri SP</span>
+              <span><strong>E-mail</strong> {Y7_INFO.contatos.email}</span>
             </div>
           </div>
 
-          {/* Dados da Empresa Auditada */}
-          <div style={{ textAlign: 'center', marginBottom: '14px', paddingBottom: '8px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
-            <h2 style={{ fontSize: '1.15rem', color: '#FFFFFF', textTransform: 'uppercase', letterSpacing: '0.03em', margin: 0 }}>
-              {empresaData.razaoSocial}
+          {/* Dados da Empresa Auditada com Data de Emissão (100% Editáveis Diretamente) */}
+          <div className="company-header-block" style={{ textAlign: 'center', marginBottom: '14px', paddingBottom: '8px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+            <h2 style={{ fontSize: '1.18rem', color: '#FFFFFF', textTransform: 'uppercase', letterSpacing: '0.03em', margin: 0, fontWeight: 800 }}>
+              <input
+                className="report-inline-input hide-on-print"
+                style={{ textAlign: 'center', fontSize: '1.15rem', fontWeight: 800, width: '92%', maxWidth: '540px', color: '#FFFFFF', textTransform: 'uppercase' }}
+                value={empresaData.razaoSocial}
+                onChange={(e) => setEmpresaData(prev => ({ ...prev, razaoSocial: e.target.value }))}
+                title="Razão Social da empresa (editável - clique para alterar)"
+              />
+              <span className="only-on-print" style={{ fontWeight: 800 }}>
+                {empresaData.razaoSocial}
+              </span>
             </h2>
-            <div style={{ fontSize: '0.82rem', color: '#38BDF8', fontWeight: 600, marginTop: '2px' }}>
-              CNPJ: {empresaData.cnpj} &nbsp;|&nbsp; Exercício Encerrado em 31/12/{empresaData.anoExercicio}
+            <div className="company-meta" style={{ fontSize: '0.82rem', color: '#38BDF8', fontWeight: 600, marginTop: '6px', display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '16px', alignItems: 'center' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <span>CNPJ</span>
+                <input
+                  className="report-inline-input mono hide-on-print"
+                  style={{ width: '165px', fontSize: '0.82rem', textAlign: 'center', color: '#38BDF8', fontWeight: 600 }}
+                  value={empresaData.cnpj}
+                  onChange={(e) => setEmpresaData(prev => ({ ...prev, cnpj: e.target.value }))}
+                  title="CNPJ da empresa (editável - clique para alterar)"
+                />
+                <span className="only-on-print mono">
+                  {empresaData.cnpj}
+                </span>
+              </span>
+
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <input
+                  className="report-inline-input hide-on-print"
+                  style={{ width: '280px', fontSize: '0.82rem', textAlign: 'center', color: '#38BDF8', fontWeight: 700 }}
+                  value={empresaData.textoExercicio !== undefined ? empresaData.textoExercicio : `Exercício Encerrado em 31/12/${empresaData.anoExercicio || '2026'}`}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const anoMatch = val.match(/\b(20\d\d)\b/);
+                    const novoAno = anoMatch ? anoMatch[1] : empresaData.anoExercicio;
+                    const novoAnoAnterior = anoMatch ? String(Number(anoMatch[1]) - 1) : empresaData.anoAnterior;
+                    setEmpresaData(prev => ({
+                      ...prev,
+                      textoExercicio: val,
+                      anoExercicio: novoAno,
+                      anoAnterior: novoAnoAnterior
+                    }));
+                  }}
+                  placeholder="Exercício Encerrado em 31/12/2025"
+                  title="Texto e data de encerramento do exercício (100% editável - clique para alterar)"
+                />
+                <span className="only-on-print" style={{ fontWeight: 700 }}>
+                  {empresaData.textoExercicio !== undefined ? empresaData.textoExercicio : `Exercício Encerrado em 31/12/${empresaData.anoExercicio || '2026'}`}
+                </span>
+              </span>
+
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <span>Data de Emissão</span>
+                <input
+                  className="report-inline-input mono hide-on-print"
+                  style={{ width: '115px', fontSize: '0.82rem', textAlign: 'center', color: '#38BDF8', fontWeight: 600 }}
+                  value={empresaData.dataEmissao || `02/01/${Number(empresaData.anoExercicio || 2026) + 1}`}
+                  onChange={(e) => setEmpresaData(prev => ({ ...prev, dataEmissao: e.target.value }))}
+                  placeholder="02/01/2027"
+                  title="Data oficial de emissão (editável - clique para alterar)"
+                />
+                <span className="only-on-print mono">
+                  {empresaData.dataEmissao || `02/01/${Number(empresaData.anoExercicio || 2026) + 1}`}
+                </span>
+              </span>
             </div>
           </div>
 
-          {/* 1. DRE IMPRESSÃO */}
+          {/* 1. DRE IMPRESSÃO (ESTRUTURA DO PDF) */}
           {(reportViewMode === 'unificado' || reportViewMode === 'dre') && (
-            <div style={{ marginBottom: '32px' }}>
-              <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#38BDF8', marginBottom: '10px', textTransform: 'uppercase' }}>
-                DRE – Demonstração do Resultado do Exercício
+            <div className="report-section" style={{ marginBottom: '24px' }}>
+              <div className="report-section-title" style={{ fontSize: '0.95rem', fontWeight: 800, color: '#38BDF8', marginBottom: '8px', textTransform: 'uppercase' }}>
+                DRE – DEMONSTRAÇÃO DO RESULTADO DO EXERCÍCIO
               </div>
 
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
@@ -1534,11 +1893,11 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
             </div>
           )}
 
-          {/* 2. BALANÇO PATRIMONIAL IMPRESSÃO */}
+          {/* 2. BALANÇO PATRIMONIAL IMPRESSÃO (COM AS CONTAS DO PDF) */}
           {(reportViewMode === 'unificado' || reportViewMode === 'balanco') && (
-            <div style={{ marginBottom: '32px' }}>
-              <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#38BDF8', marginBottom: '10px', textTransform: 'uppercase' }}>
-                Balanço Patrimonial Sintético
+            <div className="report-section" style={{ marginBottom: '24px' }}>
+              <div className="report-section-title" style={{ fontSize: '0.95rem', fontWeight: 800, color: '#38BDF8', marginBottom: '8px', textTransform: 'uppercase' }}>
+                BALANÇO PATRIMONIAL SINTÉTICO
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -1561,7 +1920,7 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
                     <span className="mono">{formatBRL(ativoCalculado.duplicatas)}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0 2px 10px', color: '#94A3B8' }}>
-                    <span>• Estoques</span>
+                    <span>• Estoques (Mercadorias & Material)</span>
                     <span className="mono">{formatBRL(ativoCalculado.totalEstoques)}</span>
                   </div>
 
@@ -1577,6 +1936,18 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
                     <span>• Imobilizado Líquido</span>
                     <span className="mono">{formatBRL(ativoCalculado.totalImobilizado)}</span>
                   </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0 2px 18px', color: '#64748B', fontSize: '0.8rem' }}>
+                    <span>- Máquinas & Equipamentos</span>
+                    <span className="mono">{formatBRL(ativoCalculado.maquinas + ativoCalculado.informatica)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0 2px 18px', color: '#64748B', fontSize: '0.8rem' }}>
+                    <span>- Veículos & Instalações</span>
+                    <span className="mono">{formatBRL(ativoCalculado.veiculos + ativoCalculado.instalacoes)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0 2px 18px', color: '#EF4444', fontSize: '0.8rem' }}>
+                    <span>- (-) Depreciação Acumulada</span>
+                    <span className="mono">{formatBRL(ativoCalculado.depreciacao)}</span>
+                  </div>
                 </div>
 
                 {/* Coluna Passivo & PL */}
@@ -1588,6 +1959,10 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', color: '#FFFFFF' }}>
                     <span>2.1 Passivo Circulante</span>
                     <span className="mono">{formatBRL(passivoCalculado.totalCirculante)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0 2px 10px', color: '#94A3B8' }}>
+                    <span>• Fornecedores</span>
+                    <span className="mono">{formatBRL(passivoCalculado.fornecedores)}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0 2px 10px', color: '#94A3B8' }}>
                     <span>• Obrigações Fiscais e Tributárias</span>
@@ -1623,48 +1998,230 @@ export default function FinancialStatementsEditor({ clients = [], onUpdateClient
             </div>
           )}
 
-          {/* 3. QUADRO FORMAL DE ASSINATURAS (REPLICADO DA PLANILHA) */}
-          <div style={{
-            paddingTop: '32px',
+          {/* 3. FATURAMENTO 12 MESES IMPRESSÃO */}
+          {(reportViewMode === 'unificado' || reportViewMode === 'faturamento') && (
+            <div className="report-section" style={{ marginBottom: '24px' }}>
+              <div className="report-section-title" style={{ fontSize: '0.95rem', fontWeight: 800, color: '#38BDF8', marginBottom: '8px', textTransform: 'uppercase' }}>
+                DECLARAÇÃO DE FATURAMENTO – 12 MESES
+              </div>
+
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1.5px solid rgba(255,255,255,0.2)' }}>
+                    <th style={{ padding: '8px 10px', textAlign: 'left', width: '220px' }}>MÊS</th>
+                    <th style={{ padding: '8px 10px', textAlign: 'center', width: '140px' }}>ANO</th>
+                    <th style={{ padding: '8px 10px', textAlign: 'right', width: '200px' }}>FATURAMENTO (R$)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tabelaFaturamento.map((row, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                      <td style={{ padding: '6px 10px', fontWeight: 600 }}>{row.mes.toUpperCase()}</td>
+                      <td className="mono" style={{ padding: '6px 10px', textAlign: 'center', color: '#94A3B8' }}>{row.ano}</td>
+                      <td className="mono" style={{ padding: '6px 10px', textAlign: 'right' }}>{formatBRL(row.valorMensal)}</td>
+                    </tr>
+                  ))}
+                  <tr style={{ backgroundColor: 'rgba(56, 189, 248, 0.1)', borderTop: '1.5px solid rgba(56, 189, 248, 0.4)', fontWeight: 800 }}>
+                    <td style={{ padding: '10px' }}>TOTAL CONSOLIDADO</td>
+                    <td className="mono" style={{ padding: '10px', textAlign: 'center' }}>12 MESES</td>
+                    <td className="mono" style={{ padding: '10px', textAlign: 'right', fontSize: '1.05rem', color: '#00F5D4' }}>{formatBRL(faturamentoTotal)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* 4. DECLARAÇÃO DE IMPOSTOS IMPRESSÃO (PIS, COFINS, CSLL, IRPJ) */}
+          {(reportViewMode === 'unificado' || reportViewMode === 'impostos') && (
+            <div className="report-section" style={{ marginBottom: '24px' }}>
+              <div className="report-section-title" style={{ fontSize: '0.95rem', fontWeight: 800, color: '#38BDF8', marginBottom: '8px', textTransform: 'uppercase' }}>
+                DECLARAÇÃO DE FATURAMENTO E APURAÇÃO DE IMPOSTOS FEDERAIS
+              </div>
+
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.86rem' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1.5px solid rgba(255,255,255,0.2)' }}>
+                    <th style={{ padding: '8px 10px', textAlign: 'left', width: '50px' }}>CÓD</th>
+                    <th style={{ padding: '8px 10px', textAlign: 'left', width: '130px' }}>MÊS</th>
+                    <th style={{ padding: '8px 10px', textAlign: 'right' }}>PIS (~0,72%)</th>
+                    <th style={{ padding: '8px 10px', textAlign: 'right' }}>COFINS (~3,31%)</th>
+                    <th style={{ padding: '8px 10px', textAlign: 'right' }}>CSLL (~1,19%)</th>
+                    <th style={{ padding: '8px 10px', textAlign: 'right' }}>IRPJ (~2,65%)</th>
+                    <th style={{ padding: '8px 10px', textAlign: 'right', width: '160px' }}>FATURAMENTO (R$)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tabelaImpostos.map(row => (
+                    <tr key={row.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                      <td className="mono" style={{ padding: '6px 10px' }}>{row.id}</td>
+                      <td style={{ padding: '6px 10px', fontWeight: 600 }}>{row.mes}</td>
+                      <td className="mono" style={{ padding: '6px 10px', textAlign: 'right' }}>{formatBRL(row.pis)}</td>
+                      <td className="mono" style={{ padding: '6px 10px', textAlign: 'right' }}>{formatBRL(row.cofins)}</td>
+                      <td className="mono" style={{ padding: '6px 10px', textAlign: 'right' }}>{formatBRL(row.csll)}</td>
+                      <td className="mono" style={{ padding: '6px 10px', textAlign: 'right' }}>{formatBRL(row.irpj)}</td>
+                      <td className="mono" style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 600 }}>{formatBRL(row.faturamento)}</td>
+                    </tr>
+                  ))}
+                  <tr style={{ backgroundColor: 'rgba(56, 189, 248, 0.1)', borderTop: '1.5px solid rgba(56, 189, 248, 0.4)', fontWeight: 800 }}>
+                    <td colSpan={2} style={{ padding: '10px' }}>TOTAL CONSOLIDADO ANUAL</td>
+                    <td className="mono" style={{ padding: '10px', textAlign: 'right' }}>{formatBRL(totaisImpostos.pis)}</td>
+                    <td className="mono" style={{ padding: '10px', textAlign: 'right' }}>{formatBRL(totaisImpostos.cofins)}</td>
+                    <td className="mono" style={{ padding: '10px', textAlign: 'right' }}>{formatBRL(totaisImpostos.csll)}</td>
+                    <td className="mono" style={{ padding: '10px', textAlign: 'right' }}>{formatBRL(totaisImpostos.irpj)}</td>
+                    <td className="mono" style={{ padding: '10px', textAlign: 'right', fontSize: '1.02rem', color: '#00F5D4' }}>{formatBRL(totaisImpostos.faturamento)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* 5. QUADRO FORMAL DE ASSINATURAS */}
+          <div className="report-signature-section" style={{
+            paddingTop: '20px',
             borderTop: '1px dashed rgba(255, 255, 255, 0.2)',
-            marginTop: '36px'
+            marginTop: '32px'
           }}>
-            <div style={{ 
-              fontSize: '0.82rem', 
+            {/* 1. Assinaturas ACIMA - Sempre alinhadas na mesma linha horizontal */}
+            <div className="signature-grid" style={{
+              display: 'flex',
+              flexDirection: 'row',
+              flexWrap: 'nowrap',
+              justifyContent: 'space-around',
+              alignItems: 'flex-start',
+              width: '100%',
+              maxWidth: '740px',
+              margin: '0 auto 14px auto'
+            }}>
+              {/* Lugar da Assinatura do Contador */}
+              <div className="signature-col" style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', flex: '1 1 0%', maxWidth: '340px', padding: '0 10px' }}>
+                <div className="signature-spacer" style={{ height: '32px' }} />
+                <div className="signature-line" style={{ borderBottom: '1.5px solid #CBD5E1', marginBottom: '8px', width: '250px' }} />
+                <div className="signature-name" style={{ fontSize: '0.94rem', fontWeight: 800 }}>
+                  {isReportEditing && (
+                    <input
+                      className="report-inline-input hide-on-print"
+                      style={{ textAlign: 'center', fontWeight: 800, width: '240px' }}
+                      value={empresaData.contador.nome}
+                      onChange={(e) => setEmpresaData(prev => ({
+                        ...prev,
+                        contador: { ...prev.contador, nome: e.target.value }
+                      }))}
+                    />
+                  )}
+                  <span className={isReportEditing ? 'only-on-print' : ''} style={{ fontWeight: 800 }}>
+                    {empresaData.contador.nome}
+                  </span>
+                </div>
+                <div className="signature-role" style={{ fontSize: '0.80rem', marginTop: '2px', fontWeight: 600 }}>
+                  <span>Contador </span>
+                  {isReportEditing && (
+                    <input
+                      className="report-inline-input hide-on-print"
+                      style={{ textAlign: 'center', width: '130px', fontSize: '0.8rem' }}
+                      value={empresaData.contador.crc}
+                      onChange={(e) => setEmpresaData(prev => ({
+                        ...prev,
+                        contador: { ...prev.contador, crc: e.target.value }
+                      }))}
+                    />
+                  )}
+                  <span className={isReportEditing ? 'only-on-print' : ''}>
+                    {empresaData.contador.crc}
+                  </span>
+                </div>
+                <div className="signature-doc" style={{ fontSize: '0.78rem', marginTop: '1px' }}>
+                  <span>CPF </span>
+                  {isReportEditing && (
+                    <input
+                      className="report-inline-input hide-on-print"
+                      style={{ textAlign: 'center', width: '130px', fontSize: '0.78rem' }}
+                      value={empresaData.contador.cpf}
+                      onChange={(e) => setEmpresaData(prev => ({
+                        ...prev,
+                        contador: { ...prev.contador, cpf: e.target.value }
+                      }))}
+                    />
+                  )}
+                  <span className={isReportEditing ? 'only-on-print' : ''}>
+                    {empresaData.contador.cpf}
+                  </span>
+                </div>
+                <div className="signature-sub" style={{ fontSize: '0.75rem', marginTop: '2px', fontWeight: 600 }}>Responsável Técnico Y7 SERVICE</div>
+              </div>
+
+              {/* Lugar da Assinatura do Sócio Administrador */}
+              <div className="signature-col" style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', flex: '1 1 0%', maxWidth: '340px', padding: '0 10px' }}>
+                <div className="signature-spacer" style={{ height: '32px' }} />
+                <div className="signature-line" style={{ borderBottom: '1.5px solid #CBD5E1', marginBottom: '8px', width: '250px' }} />
+                <div className="signature-name" style={{ fontSize: '0.94rem', fontWeight: 800 }}>
+                  {isReportEditing && (
+                    <input
+                      className="report-inline-input hide-on-print"
+                      style={{ textAlign: 'center', fontWeight: 800, width: '240px' }}
+                      value={empresaData.socio.nome}
+                      onChange={(e) => setEmpresaData(prev => ({
+                        ...prev,
+                        socio: { ...prev.socio, nome: e.target.value }
+                      }))}
+                    />
+                  )}
+                  <span className={isReportEditing ? 'only-on-print' : ''} style={{ fontWeight: 800 }}>
+                    {empresaData.socio.nome}
+                  </span>
+                </div>
+                <div className="signature-role" style={{ fontSize: '0.80rem', marginTop: '2px', fontWeight: 600 }}>
+                  {isReportEditing && (
+                    <input
+                      className="report-inline-input hide-on-print"
+                      style={{ textAlign: 'center', width: '160px', fontSize: '0.8rem' }}
+                      value={empresaData.socio.qualificacao}
+                      onChange={(e) => setEmpresaData(prev => ({
+                        ...prev,
+                        socio: { ...prev.socio, qualificacao: e.target.value }
+                      }))}
+                    />
+                  )}
+                  <span className={isReportEditing ? 'only-on-print' : ''}>
+                    {empresaData.socio.qualificacao}
+                  </span>
+                </div>
+                <div className="signature-doc" style={{ fontSize: '0.78rem', marginTop: '1px' }}>
+                  <span>CPF </span>
+                  {isReportEditing && (
+                    <input
+                      className="report-inline-input hide-on-print"
+                      style={{ textAlign: 'center', width: '130px', fontSize: '0.78rem' }}
+                      value={empresaData.socio.cpf}
+                      onChange={(e) => setEmpresaData(prev => ({
+                        ...prev,
+                        socio: { ...prev.socio, cpf: e.target.value }
+                      }))}
+                    />
+                  )}
+                  <span className={isReportEditing ? 'only-on-print' : ''}>
+                    {empresaData.socio.cpf}
+                  </span>
+                </div>
+                <div className="signature-sub" style={{ fontSize: '0.75rem', marginTop: '2px' }}>{empresaData.razaoSocial}</div>
+              </div>
+            </div>
+
+            {/* 2. Informação ABAIXO */}
+            <div className="signature-disclaimer" style={{ 
+              fontSize: '0.8rem', 
               color: '#94A3B8', 
               lineHeight: 1.5,
               textAlign: 'center',
-              marginBottom: '36px'
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '2px'
             }}>
-              São Paulo, 02 de Janeiro de {Number(empresaData.anoExercicio) + 1} &nbsp;•&nbsp; 
-              Emissão e Validação Técnica Contábil por <strong>Y7 SERVICE LTDA</strong> &nbsp;•&nbsp; 
-              Normas Brasileiras de Contabilidade NBC TG / CFC
-            </div>
-
-            <div className="signature-grid" style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '40px',
-              maxWidth: '720px',
-              margin: '0 auto'
-            }}>
-              {/* Assinatura Contador */}
-              <div className="signature-col" style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div className="signature-line" style={{ borderBottom: '1.5px solid #CBD5E1', marginBottom: '8px', width: '250px' }} />
-                <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#FFFFFF' }}>{empresaData.contador.nome}</div>
-                <div style={{ fontSize: '0.8rem', color: '#94A3B8', marginTop: '2px' }}>Contador – {empresaData.contador.crc}</div>
-                <div style={{ fontSize: '0.78rem', color: '#94A3B8' }}>CPF: {empresaData.contador.cpf}</div>
-                <div style={{ fontSize: '0.76rem', color: '#38BDF8', fontWeight: 600, marginTop: '2px' }}>Responsável Técnico – Y7 SERVICE</div>
+              <div>
+                São Paulo {formatarDataExtenso(empresaData.dataEmissao, empresaData.anoExercicio)}
               </div>
-
-              {/* Assinatura Sócio Administrador */}
-              <div className="signature-col" style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div className="signature-line" style={{ borderBottom: '1.5px solid #CBD5E1', marginBottom: '8px', width: '250px' }} />
-                <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#FFFFFF' }}>{empresaData.socio.nome}</div>
-                <div style={{ fontSize: '0.8rem', color: '#94A3B8', marginTop: '2px' }}>{empresaData.socio.qualificacao}</div>
-                <div style={{ fontSize: '0.78rem', color: '#94A3B8' }}>CPF/MF: {empresaData.socio.cpf}</div>
-                <div style={{ fontSize: '0.76rem', color: '#CBD5E1', fontWeight: 500, marginTop: '2px' }}>{empresaData.razaoSocial}</div>
-              </div>
+              <div>Emissão e Validação Técnica Contábil por <strong>Y7 SERVICE LTDA</strong></div>
+              <div style={{ fontSize: '0.76rem', color: '#64748B' }}>Normas Brasileiras de Contabilidade NBC TG CFC</div>
             </div>
           </div>
         </div>

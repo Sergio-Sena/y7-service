@@ -51,7 +51,7 @@ export default function Footer({ onOpenAdmin }) {
 
             <div style={{ fontSize: '0.82rem', color: '#94A3B8', lineHeight: 1.6 }}>
               <strong>Razão Social:</strong> {Y7_INFO.razaoSocial}<br />
-              <strong>CNPJ:</strong> {Y7_INFO.cnpj} • Porte {Y7_INFO.porte}
+              <strong>CNPJ:</strong> {Y7_INFO.cnpj}
             </div>
           </div>
 
