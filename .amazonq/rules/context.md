@@ -101,8 +101,8 @@ Supabase gratuito pausa após 7 dias sem uso. Migrar para AWS elimina essa limit
 ### Arquitetura alvo
 ```
 React (Amplify) → API Gateway → Lambda → DynamoDB
-                                       ↓
-                              Cognito (Auth)
+                       ↑
+                 Supabase Auth (mantido)
 ```
 
 ### Fase A — DynamoDB
@@ -114,13 +114,9 @@ React (Amplify) → API Gateway → Lambda → DynamoDB
 - Criar funções Lambda para cada operação CRUD
 - Criar API Gateway REST conectado às Lambdas
 - O frontend chama a API em vez do Supabase diretamente
+- Supabase Auth permanece para autenticação
 
-### Fase C — Cognito
-- Criar User Pool no Cognito
-- Migrar usuários do Supabase Auth
-- Reescrever autenticação no `LoginModal` e `App.jsx`
-
-### Fase D — Migração de dados
+### Fase C — Migração de dados
 - Exportar dados do Supabase
 - Importar no DynamoDB
 - Validar integridade
@@ -131,7 +127,7 @@ React (Amplify) → API Gateway → Lambda → DynamoDB
 | DynamoDB | ~$0 (free tier) |
 | Lambda | ~$0 (free tier) |
 | API Gateway | ~$1-3 |
-| Cognito | $0 até 50k usuários |
+| Supabase Auth | $0 (plano gratuito) |
 | **Total** | **~$1-3/mês** |
 
 ## Componentes principais
