@@ -56,7 +56,7 @@ export default function LocationSection() {
                 <div>
                   <h3 style={{ fontSize: '1.2rem', color: '#FFFFFF' }}>{Y7_INFO.razaoSocial}</h3>
                   <div style={{ fontSize: '0.82rem', color: '#38BDF8', fontWeight: 600 }}>
-                    CNPJ: {Y7_INFO.cnpj} • Porte {Y7_INFO.porte}
+                    CNPJ: {Y7_INFO.cnpj}
                   </div>
                 </div>
               </div>
