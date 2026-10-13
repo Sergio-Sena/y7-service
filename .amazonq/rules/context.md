@@ -67,14 +67,14 @@ VITE_SUPABASE_ANON_KEY
 
 ## Plano de Deploy
 
-### Fase 1 — Código (bloqueador)
-- [ ] Integrar `db.js` no `App.jsx` (substituir localStorage)
-- [ ] Migrar autenticação para Supabase Auth
+### Fase 1 — Código (bloqueador) ✅ Concluído
+- [x] Integrar `db.js` no `App.jsx` (substituir localStorage)
+- [x] Migrar autenticação para Supabase Auth
 
-### Fase 2 — AWS Amplify
-- [ ] Criar app no Amplify Console conectado ao `Sergio-Sena/y7-service`
-- [ ] Criar `amplify.yml` na raiz (build: `npm ci && npm run build`, artifacts: `dist/`)
-- [ ] Configurar as 5 variáveis de ambiente no Amplify Console
+### Fase 2 — AWS Amplify ✅ Concluído
+- [x] Criar app no Amplify Console conectado ao `Sergio-Sena/y7-service`
+- [x] Criar `amplify.yml` na raiz (build: `npm ci && npm run build`, artifacts: `dist/`)
+- [x] Configurar as variáveis de ambiente no Amplify Console
 
 ### Fase 3 — GitHub Actions (CI)
 - [ ] Criar `.github/workflows/deploy.yml`
@@ -82,14 +82,57 @@ VITE_SUPABASE_ANON_KEY
   - Build de validação
   - Deploy automático para Amplify no merge na `main`
 
-### Fase 4 — DNS registro.br
-- [ ] Definir domínio (confirmar com cliente)
-- [ ] Adicionar domínio customizado no Amplify → obter CNAMEs
-- [ ] Apontar CNAMEs no registro.br
-- [ ] SSL provisionado automaticamente via ACM
+### Fase 4 — DNS registro.br ✅ Concluído
+- [x] Domínio `y7service.com.br` configurado
+- [x] CNAMEs adicionados no registro.br
+- [x] SSL provisionado via ACM
+- [x] Redirecionamento raiz → www configurado no Amplify
 
 ### Fase 5 — Pós-deploy
 - [ ] Sentry para erros em produção
+
+---
+
+## Roadmap de Migração AWS (Futuro)
+
+### Motivação
+Supabase gratuito pausa após 7 dias sem uso. Migrar para AWS elimina essa limitação com custo similar ou menor.
+
+### Arquitetura alvo
+```
+React (Amplify) → API Gateway → Lambda → DynamoDB
+                                       ↓
+                              Cognito (Auth)
+```
+
+### Fase A — DynamoDB
+- Criar tabelas: `y7-clientes`, `y7-obrigacoes`, `y7-usuarios`
+- Modelar chaves de partição e sort keys
+- Reescrever `src/lib/db.js` usando AWS SDK v3
+
+### Fase B — Lambda + API Gateway
+- Criar funções Lambda para cada operação CRUD
+- Criar API Gateway REST conectado às Lambdas
+- O frontend chama a API em vez do Supabase diretamente
+
+### Fase C — Cognito
+- Criar User Pool no Cognito
+- Migrar usuários do Supabase Auth
+- Reescrever autenticação no `LoginModal` e `App.jsx`
+
+### Fase D — Migração de dados
+- Exportar dados do Supabase
+- Importar no DynamoDB
+- Validar integridade
+
+### Custo estimado mensal
+| Serviço | Custo |
+|---|---|
+| DynamoDB | ~$0 (free tier) |
+| Lambda | ~$0 (free tier) |
+| API Gateway | ~$1-3 |
+| Cognito | $0 até 50k usuários |
+| **Total** | **~$1-3/mês** |
 
 ## Componentes principais
 | Arquivo | Responsabilidade |
