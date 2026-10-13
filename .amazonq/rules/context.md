@@ -101,8 +101,8 @@ Supabase gratuito pausa após 7 dias sem uso. Migrar para AWS elimina essa limit
 ### Arquitetura alvo
 ```
 React (Amplify) → API Gateway → Lambda → DynamoDB
-                       ↑
-                 Supabase Auth (mantido)
+                       ↑                    ↑
+                 Supabase Auth         Secrets Manager
 ```
 
 ### Fase A — DynamoDB
@@ -116,7 +116,13 @@ React (Amplify) → API Gateway → Lambda → DynamoDB
 - O frontend chama a API em vez do Supabase diretamente
 - Supabase Auth permanece para autenticação
 
-### Fase C — Migração de dados
+### Fase C — Secrets Manager
+- Migrar todas as credenciais para o Secrets Manager
+- `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` e demais secrets
+- Lambdas buscam credenciais via Secrets Manager em runtime
+- Amplify busca secrets no build via integração nativa
+
+### Fase D — Migração de dados
 - Exportar dados do Supabase
 - Importar no DynamoDB
 - Validar integridade
@@ -127,8 +133,9 @@ React (Amplify) → API Gateway → Lambda → DynamoDB
 | DynamoDB | ~$0 (free tier) |
 | Lambda | ~$0 (free tier) |
 | API Gateway | ~$1-3 |
+| Secrets Manager | ~$0.40/secret |
 | Supabase Auth | $0 (plano gratuito) |
-| **Total** | **~$1-3/mês** |
+| **Total** | **~$2-4/mês** |
 
 ## Componentes principais
 | Arquivo | Responsabilidade |
